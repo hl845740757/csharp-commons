@@ -16,14 +16,18 @@
 
 #endregion
 
+using System.Collections;
+
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 按照C#的习惯，当元素不存在时默认抛出异常
+///
+/// 1.按照C#的习惯，当元素不存在时默认抛出异常
+/// 2.未来可扩展查询下一个key的方法
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
-public interface ISequencedDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull
+public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, TValue> where TKey : notnull
 {
     #region peek
 
@@ -34,6 +38,23 @@ public interface ISequencedDictionary<TKey, TValue> : IDictionary<TKey, TValue> 
     public KeyValuePair<TKey, TValue> LastPair { get; }
     public TKey LastKey { get; }
     public TValue LastValue { get; }
+
+    /// <summary>
+    /// 获取key关联的值，如果关联的值不存在，则返回预设的默认值。
+    /// 1.如果字典支持自定义默认值，则返回自定义默认值。
+    /// 2.如果字典不支持自定义默认值，则返回default分配的对象。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public TValue GetOrDefault(TKey key);
+
+    /// <summary>
+    /// 获取key关联的值，如果关联的值不存在，则返回给定的默认值。
+    /// </summary>
+    /// <param name="key">key</param>
+    /// <param name="defVal">key不存在时的默认值</param>
+    /// <returns></returns>
+    public TValue GetOrDefault(TKey key, TValue defVal);
 
     #endregion
 
@@ -70,6 +91,15 @@ public interface ISequencedDictionary<TKey, TValue> : IDictionary<TKey, TValue> 
     #endregion
 
     #region remove
+
+    /// <summary>
+    /// 字典的原生接口Remove只有返回值，其实是不好的，更多的情况下我们需要返回值；但C#存在值结构，当value是值类型的时候总是返回值会导致不必要的内存分配。
+    /// <see cref="Dictionary{TKey,TValue}"/>中提供了该补偿方法，但未在接口中添加。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value">接收返回值</param>
+    /// <returns>是否删除成功</returns>
+    public bool Remove(TKey key, out TValue value);
 
     /// <summary>
     /// 删除有序字典的首个键值对

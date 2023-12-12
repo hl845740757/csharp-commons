@@ -19,23 +19,11 @@
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 如果要插入的元素已存在，要执行的行为枚举
-/// 该枚举在系统库中存在，但未开放，因此我们再定义一个
+/// 集合的特征值，按比特位存储
 /// </summary>
-internal enum InsertionBehavior : byte
+[Flags]
+public enum CollectionOption : byte
 {
-    /// <summary>
-    /// 什么也不做
-    /// </summary>
-    None = 0,
-
-    /// <summary>
-    /// 覆盖当前值
-    /// </summary>
-    OverwriteExisting = 1,
-
-    /// <summary>
-    /// 抛出异常
-    /// </summary>
-    ThrowOnExisting = 2
+    /** 在负载小于一定值的情况下自动缩减容量 */
+    AutoTrim = 1 << 0,
 }
