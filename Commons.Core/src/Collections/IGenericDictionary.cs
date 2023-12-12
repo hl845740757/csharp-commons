@@ -31,6 +31,22 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     new IGenericCollection<TKey> Keys { get; }
     new IGenericCollection<TValue> Values { get; }
 
+    /// <summary>
+    /// 是否包含给定的Value
+    /// (看似IDictionary没定义此接口，实际上却必须要实现，因为Values集合要实现Contains)
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    bool ContainsValue(TValue value);
+
+    /// <summary>
+    /// 与Add不同，Put操作在Key存在值，总是覆盖当前关联值，而不是抛出异常
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    PutResult<TValue> Put(TKey key, TValue value);
+
     #region 接口适配
 
     // 不建议子类再实现这些接口

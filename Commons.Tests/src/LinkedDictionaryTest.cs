@@ -27,16 +27,17 @@ public class LinkedDictionaryTest
     public void TestDic() {
         HashSet<int> keySet = new HashSet<int>(10240);
         List<int> keyList = new List<int>(10240);
-        LinkedDictionary<int, string> dictionary = new LinkedDictionary<int, string>(5864);
+        LinkedDictionary<int, string> dictionary = new LinkedDictionary<int, string>(10240);
 
         while (keySet.Count < 10000) {
-            // if (Random.Shared.Next(0, 2) == 1 && keyList.Count > 1000) {
-            //     int idx = Random.Shared.Next(0, keyList.Count);
-            //     int key = keyList[idx];
-            //     keyList.RemoveAt(idx);
-            //     dictionary.Remove(key, out _);
-            //     continue;
-            // }
+            if (Random.Shared.Next(0, 2) == 1 && keyList.Count > 1000) {
+                int idx = Random.Shared.Next(0, keyList.Count);
+                int key = keyList[idx];
+                keyList.RemoveAt(idx);
+                keySet.Remove(key);
+                dictionary.Remove(key, out _);
+                continue;
+            }
             var next = Random.Shared.Next(0, 200000);
             if (keySet.Add(next)) {
                 keyList.Add(next);

@@ -23,8 +23,8 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 internal enum InsertionOrder : byte
 {
-    /** 正常序 - 默认值 */
-    Normal = 0,
+    /** 默认值 */
+    Default = 0,
 
     /** 插在尾部 */
     Tail = 1,

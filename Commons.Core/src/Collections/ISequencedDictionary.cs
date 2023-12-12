@@ -56,6 +56,22 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// <returns></returns>
     public TValue GetOrDefault(TKey key, TValue defVal);
 
+    /// <summary>
+    /// 获取元素，并将元素移动到首部
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns>如果元素存在则返回true</returns>
+    public bool GetAndMoveToFirst(TKey key, out TValue value);
+
+    /// <summary>
+    /// 获取元素，并将元素移动到尾部
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns>如果元素存在则返回true</returns>
+    public bool GetAndMoveToLast(TKey key, out TValue value);
+
     #endregion
 
     #region add
@@ -87,6 +103,22 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// </summary>
     /// <returns>是否添加成功</returns>
     public bool TryAddLast(TKey key, TValue value);
+
+    /// <summary>
+    /// 如果key存在则覆盖，并移动到首部；如果key不存在，则插入到首部
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public PutResult<TValue> PutFirst(TKey key, TValue value);
+
+    /// <summary>
+    /// 如果key存在则覆盖，并移动到末尾；如果key不存在，则插入到末尾
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public PutResult<TValue> PutLast(TKey key, TValue value);
 
     #endregion
 
@@ -130,6 +162,17 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// <param name="pair"></param>
     /// <returns>是否删除成功</returns>
     public bool TryRemoveLast(out KeyValuePair<TKey, TValue> pair);
+
+    #endregion
+
+    #region itr
+
+    /// <summary>
+    /// 获取反向迭代器
+    /// 暂时不打算定义复杂Collection接口，即使以后添加，该接口也可以作为常用的快捷方法。
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator<KeyValuePair<TKey, TValue>> GetReversedEnumerator();
 
     #endregion
 }
