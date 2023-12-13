@@ -80,6 +80,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         : this(0, HashCommon.DefaultLoadFactor) {
     }
 
+    public LinkedDictionary(IDictionary<TKey, TValue> src)
+        : this(src.Count, HashCommon.DefaultLoadFactor) {
+        PutRange(src);
+    }
+
     public LinkedDictionary(IEqualityComparer<TKey> comparer)
         : this(0, HashCommon.DefaultLoadFactor, comparer) {
     }
@@ -281,16 +286,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #region add
 
-    public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
-        if (collection == null) throw new ArgumentNullException(nameof(collection));
-        if (collection is ICollection<KeyValuePair<TKey, TValue>> c) {
-            EnsureCapacity(_count + c.Count);
-        }
-        foreach (KeyValuePair<TKey, TValue> pair in collection) {
-            Add(pair.Key, pair.Value);
-        }
-    }
-
     public void Add(KeyValuePair<TKey, TValue> item) {
         bool modified = TryInsert(item.Key, item.Value, InsertionOrder.Default, InsertionBehavior.ThrowOnExisting);
         Debug.Assert(modified);
@@ -347,10 +342,30 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return TryPut(key, value, PutBehavior.MoveToLast);
     }
 
+    public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
+        if (collection == null) throw new ArgumentNullException(nameof(collection));
+        if (collection is ICollection<KeyValuePair<TKey, TValue>> c) {
+            if (_loadFactor <= 0.5f) {
+                EnsureCapacity(c.Count); // 负载小于0.5，数组的长度将大于等于count的2倍，就能放下所有元素
+            }
+            else {
+                TryCapacity(_count + c.Count);
+            }
+        }
+        foreach (KeyValuePair<TKey, TValue> pair in collection) {
+            Add(pair.Key, pair.Value);
+        }
+    }
+
     public void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
         if (collection == null) throw new ArgumentNullException(nameof(collection));
         if (collection is ICollection<KeyValuePair<TKey, TValue>> c) {
-            EnsureCapacity(_count + c.Count);
+            if (_loadFactor <= 0.5f) {
+                EnsureCapacity(c.Count); // 负载小于0.5，数组的长度将大于等于count的2倍，就能放下所有元素
+            }
+            else {
+                TryCapacity(_count + c.Count);
+            }
         }
         foreach (KeyValuePair<TKey, TValue> pair in collection) {
             TryPut(pair.Key, pair.Value, PutBehavior.None);
@@ -811,6 +826,13 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     private void EnsureCapacity(int capacity) {
         int arraySize = HashCommon.ArraySize(capacity, _loadFactor);
+        if (arraySize > _mask + 1) {
+            Rehash(arraySize);
+        }
+    }
+
+    private void TryCapacity(int capacity) {
+        int arraySize = HashCommon.TryArraySize(capacity, _loadFactor);
         if (arraySize > _mask + 1) {
             Rehash(arraySize);
         }

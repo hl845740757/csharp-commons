@@ -63,6 +63,12 @@ public static class HashCommon
     /** Hash结构的最大数组大小 */
     public const int MaxArraySize = 1 << 30;
 
+    /** 如果目标容量大于最大数组大小，将调整为最大数组大小 */
+    public static int TryArraySize(int expected, float f) {
+        long s = Math.Max(MinArraySize, NextPowerOfTwo((long)Math.Ceiling(expected / f)));
+        return (int)Math.Min(MaxArraySize, s);
+    }
+
     public static void CheckLoadFactor(float loadFactor) {
         if (loadFactor <= 0 || loadFactor >= 1) {
             throw new ApplicationException("Load factor must be greater than 0 and smaller than 1");
