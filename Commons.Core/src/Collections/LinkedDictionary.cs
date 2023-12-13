@@ -45,14 +45,13 @@ namespace Wjybxx.Commons.Collections;
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
 [Serializable]
-public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>,
-    ISerializable where TKey : notnull
+public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, ISerializable where TKey : notnull
 {
     // C#的泛型是独立的类，因此缓存是独立的
     private static readonly bool KeyIsValueType = typeof(TKey).IsValueType;
     private static readonly bool ValueIsValueType = typeof(TValue).IsValueType;
 
-    /** 总是延迟分配空间，以减少创建Dictionary的开销 */
+    /** 总是延迟分配空间，以减少创建空实例的开销 */
     private Node?[]? _table; // 这个NullableReference有时真的很烦
     private Node? _head;
     private Node? _tail;
@@ -357,21 +356,14 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
-        if (collection == null) throw new ArgumentNullException(nameof(collection));
-        if (collection is ICollection<KeyValuePair<TKey, TValue>> c) {
-            if (_loadFactor <= 0.5f) {
-                EnsureCapacity(c.Count); // 负载小于0.5，数组的长度将大于等于count的2倍，就能放下所有元素
-            }
-            else {
-                TryCapacity(_count + c.Count);
-            }
-        }
-        foreach (KeyValuePair<TKey, TValue> pair in collection) {
-            Add(pair.Key, pair.Value);
-        }
+        InsertRange(collection, InsertionBehavior.ThrowOnExisting);
     }
 
     public void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
+        InsertRange(collection, InsertionBehavior.OverwriteExisting);
+    }
+
+    private void InsertRange(IEnumerable<KeyValuePair<TKey, TValue>> collection, InsertionBehavior behavior) {
         if (collection == null) throw new ArgumentNullException(nameof(collection));
         if (collection is ICollection<KeyValuePair<TKey, TValue>> c) {
             if (_loadFactor <= 0.5f) {
@@ -382,7 +374,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             }
         }
         foreach (KeyValuePair<TKey, TValue> pair in collection) {
-            TryPut(pair.Key, pair.Value, PutBehavior.None);
+            TryInsert(pair.Key, pair.Value, InsertionOrder.Default, behavior);
         }
     }
 
@@ -759,7 +751,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         int pos = Find(key, hash);
         if (pos >= 0) {
             Node existNode = _table![pos]!;
-            PutResult<TValue> result = new PutResult<TValue>(true, existNode._value);
+            PutResult<TValue> result = new PutResult<TValue>(false, existNode._value);
             existNode._value = value;
             if (behavior == PutBehavior.MoveToLast) {
                 MoveToLast(existNode);
@@ -783,7 +775,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                 Insert(pos, hash, key, value, InsertionOrder.Default);
                 break;
         }
-        return PutResult<TValue>.Empty;
+        return PutResult<TValue>.Insert;
     }
 
     private void Insert(int pos, int hash, TKey key, TValue value, InsertionOrder order) {

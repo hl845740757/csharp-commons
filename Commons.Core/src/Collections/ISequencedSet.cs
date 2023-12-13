@@ -19,29 +19,23 @@
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 用于表示字典Put操作的结果，避免过多的参数
+/// AddFirst在元素已存在时将移动到Set的首部
+/// AddLast在元素已存在时将移动到Set的尾部
 /// </summary>
-/// <typeparam name="TValue"></typeparam>
-public readonly struct PutResult<TValue>
+/// <typeparam name="T"></typeparam>
+public interface ISequencedSet<T> : ISequencedCollection<T>, IGenericSet<T>
 {
-    private readonly bool _isInsert;
-    private readonly TValue _prevValue;
+    /// <summary>
+    /// 返回一个当前集合的逆序视图
+    /// </summary>
+    /// <returns></returns>
+    new ISequencedSet<T> Reversed();
 
-    public PutResult(bool isInsert, TValue prevValue) {
-        _isInsert = isInsert;
-        _prevValue = prevValue;
+    #region 接口适配
+
+    ISequencedCollection<T> ISequencedCollection<T>.Reversed() {
+        return Reversed();
     }
 
-    public static readonly PutResult<TValue> Insert = new(true, default);
-
-    /// <summary>
-    /// 本次操作是否是insert操作（即没有旧值）
-    /// </summary>
-    public bool IsInsert => _isInsert;
-
-    /// <summary>
-    /// Key关联的旧值
-    /// （key不存在的情况下，可能返回预设的默认值）
-    /// </summary>
-    public TValue PrevValue => _prevValue;
+    #endregion
 }

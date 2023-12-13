@@ -26,7 +26,8 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
-public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary, IGenericCollection<KeyValuePair<TKey, TValue>>
+public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary,
+    IReadOnlyDictionary<TKey, TValue>, IGenericCollection<KeyValuePair<TKey, TValue>>
 {
     new IGenericCollection<TKey> Keys { get; }
     new IGenericCollection<TValue> Values { get; }

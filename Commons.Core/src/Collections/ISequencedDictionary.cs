@@ -16,8 +16,6 @@
 
 #endregion
 
-using System.Collections;
-
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
