@@ -29,6 +29,7 @@ namespace Wjybxx.Commons.Collections;
 public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary,
     IReadOnlyDictionary<TKey, TValue>, IGenericCollection<KeyValuePair<TKey, TValue>>
 {
+    new TValue this[TKey key] { get; set; }
     new IGenericCollection<TKey> Keys { get; }
     new IGenericCollection<TValue> Values { get; }
 
@@ -122,6 +123,12 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
             Remove(key2);
         }
     }
+
+    TValue IDictionary<TKey, TValue>.this[TKey key] {
+        get => this[key];
+        set => this[key] = value;
+    }
+    TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] => this[key];
 
     object? IDictionary.this[object key] {
         get {

@@ -19,40 +19,20 @@
 
 using System.Collections;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 保持插入序的字典
-/// 1.使用简单的线性探测法解决Hash冲突，因此在数据量较大的情况下查询性能可能会降低 -- 实际表现很好。
-/// 2.算法参考自FastUtil的LinkedOpenHashMap。
-/// 3.非线程安全。
-///
-/// 测试数据(在GetNode方法中记录线性探测次数)：
-/// 1. 1W个int类型key，hash冲突后线性探测的平均值小于1 (总次数4000~5000)
-/// 2. 10W个int类型key，hash冲突后线性探测的平均值小于1 (总次数11000~12000)
-/// 3. 1W个string类型key，长度24，hash冲突后线性探测的平均值小于1 (总次数4000~5000)(与int相似，且调整长度几无变化)
-/// 4. 10W个string类型key，长度24，hash冲突后线性探测的平均值小于1 (总次数11000~12000)(与int相似，且调整长度几无变化)
-/// 
-/// 吐槽：
-/// 1.C#的基础库里居然没有保持插入序的高性能字典，这对于编写底层工具的开发者来说太不方便了。
-/// 2.C#的集合和字典库接口太差了，泛型集合与非泛型集合兼容性也不够。
-/// 
+/// 保持插入序的Set
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
-/// <typeparam name="TValue"></typeparam>
 [Serializable]
-public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, ISerializable where TKey : notnull
+public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 {
-    // C#的泛型是独立的类，因此缓存是独立的
-    private static readonly bool KeyIsValueType = typeof(TKey).IsValueType;
-    private static readonly bool ValueIsValueType = typeof(TValue).IsValueType;
-
     /** 总是延迟分配空间，以减少创建空实例的开销 */
-    private Node?[]? _table; // 这个NullableReference有时真的很烦
+    private Node?[]? _table;
     private Node? _head;
     private Node? _tail;
 
@@ -72,19 +52,17 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     /** 用于代替key自身的equals和hashcode计算；这一点C#的设计做的要好些 */
     private IEqualityComparer<TKey> _keyComparer;
-    private KeyCollection? _keys;
-    private ValueCollection? _values;
 
-    public LinkedDictionary()
+    public LinkedHashSet()
         : this(0, HashCommon.DefaultLoadFactor) {
     }
 
-    public LinkedDictionary(IDictionary<TKey, TValue> src)
+    public LinkedHashSet(ICollection<TKey> src)
         : this(src.Count, HashCommon.DefaultLoadFactor) {
-        PutRange(src);
+        AddRange(src);
     }
 
-    public LinkedDictionary(IEqualityComparer<TKey> comparer)
+    public LinkedHashSet(IEqualityComparer<TKey> comparer)
         : this(0, HashCommon.DefaultLoadFactor, comparer) {
     }
 
@@ -94,8 +72,8 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     /// <param name="expectedCount">期望存储的元素个数，而不是直接的容量</param>
     /// <param name="loadFactor">有效负载因子</param>
     /// <param name="keyComparer">可用于避免Key比较时装箱</param>
-    public LinkedDictionary(int expectedCount, float loadFactor = 0.75f,
-                            IEqualityComparer<TKey>? keyComparer = null) {
+    public LinkedHashSet(int expectedCount, float loadFactor = 0.75f,
+                         IEqualityComparer<TKey>? keyComparer = null) {
         if (expectedCount < 0) throw new ArgumentException("The expected number of elements must be nonnegative");
         HashCommon.CheckLoadFactor(loadFactor);
         _loadFactor = loadFactor;
@@ -112,258 +90,78 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public bool IsReadOnly => false;
     public bool IsSynchronized => false;
     public object SyncRoot => this;
-    public bool IsFixedSize => false;
-
-    public IGenericCollection<TKey> Keys => CachedKeys();
-    public IGenericCollection<TValue> Values => CachedValues();
-    ICollection<TKey> IDictionary<TKey, TValue>.Keys => CachedKeys();
-    ICollection<TValue> IDictionary<TKey, TValue>.Values => CachedValues();
-    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => CachedKeys();
-    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => CachedValues();
-
-    private KeyCollection CachedKeys() {
-        if (_keys == null) {
-            _keys = new KeyCollection(this);
-        }
-        return _keys;
-    }
-
-    private ValueCollection CachedValues() {
-        if (_values == null) {
-            _values = new ValueCollection(this);
-        }
-        return _values;
-    }
-
-    public TValue this[TKey key] {
-        get {
-            Node? node = GetNode(key);
-            if (node == null) {
-                throw new KeyNotFoundException(key.ToString());
-            }
-            return node._value;
-        }
-        set => TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.OverwriteExisting);
-    }
-
-    private IEqualityComparer<TValue> ValComparer => EqualityComparer<TValue>.Default;
 
     #region peek
 
-    public bool PeekFirstPair(out KeyValuePair<TKey, TValue> pair) {
+    public bool PeekFirst(out TKey key) {
         if (_head != null) {
-            pair = _head.AsPair();
+            key = _head._key;
             return true;
         }
-        pair = default;
+        key = default;
         return false;
     }
 
-    public KeyValuePair<TKey, TValue> FirstPair {
+    public TKey First {
         get {
-            if (_head == null) throw DictionaryEmptyException();
-            return _head.AsPair();
-        }
-    }
-
-    public TKey FirstKey {
-        get {
-            if (_head == null) throw DictionaryEmptyException();
+            if (_head == null) throw CollectionEmptyException();
             return _head._key;
         }
     }
 
-    public bool PeekLastPair(out KeyValuePair<TKey, TValue> pair) {
+    public bool PeekLast(out TKey key) {
         if (_tail != null) {
-            pair = _tail.AsPair();
+            key = _tail._key;
             return true;
         }
-        pair = default;
+        key = default;
         return false;
     }
 
-    public KeyValuePair<TKey, TValue> LastPair {
+    public TKey Last {
         get {
-            if (_tail == null) throw DictionaryEmptyException();
-            return _tail.AsPair();
-        }
-    }
-
-    public TKey LastKey {
-        get {
-            if (_tail == null) throw DictionaryEmptyException();
+            if (_tail == null) throw CollectionEmptyException();
             return _tail._key;
         }
     }
 
-    private static InvalidOperationException DictionaryEmptyException() {
-        return new InvalidOperationException("Dictionary is Empty");
+    private static InvalidOperationException CollectionEmptyException() {
+        return new InvalidOperationException("Collection is Empty");
     }
 
     #endregion
 
     #region get
 
-    public bool ContainsKey(TKey key) {
+    public bool Contains(TKey key) {
         return GetNode(key) != null;
-    }
-
-    public bool ContainsValue(TValue value) {
-        if (value == null) {
-            for (Node e = _head; e != null; e = e._next) {
-                if (e._value == null) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else {
-            IEqualityComparer<TValue>? valComparer = ValComparer;
-            for (Node e = _head; e != null; e = e._next) {
-                if (valComparer.Equals(e._value, value)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
-    public bool Contains(KeyValuePair<TKey, TValue> item) {
-        Node node = GetNode(item.Key);
-        return node != null && ValComparer.Equals(node._value, item.Value);
-    }
-
-    public bool TryGetValue(TKey key, out TValue value) {
-        var node = GetNode(key);
-        if (node == null) {
-            value = default;
-            return false;
-        }
-        value = node._value;
-        return true;
-    }
-
-    public TValue GetOrDefault(TKey key) {
-        var node = GetNode(key);
-        return node == null ? default : node._value;
-    }
-
-    public TValue GetOrDefault(TKey key, TValue defVal) {
-        var node = GetNode(key);
-        return node == null ? defVal : node._value;
-    }
-
-    public TValue GetAndMoveToFirst(TKey key) {
-        var node = GetNode(key);
-        if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
-        }
-        MoveToFirst(node);
-        return node._value;
-    }
-
-    public bool TryGetAndMoveToFirst(TKey key, out TValue value) {
-        var node = GetNode(key);
-        if (node == null) {
-            value = default;
-            return false;
-        }
-        MoveToFirst(node);
-        value = node._value;
-        return true;
-    }
-
-    public TValue GetAndMoveToLast(TKey key) {
-        var node = GetNode(key);
-        if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
-        }
-        MoveToLast(node);
-        return node._value;
-    }
-
-    public bool TryGetAndMoveToLast(TKey key, out TValue value) {
-        var node = GetNode(key);
-        if (node == null) {
-            value = default;
-            return false;
-        }
-        MoveToLast(node);
-        value = node._value;
-        return true;
     }
 
     #endregion
 
     #region add
 
-    public void Add(KeyValuePair<TKey, TValue> item) {
-        bool modified = TryInsert(item.Key, item.Value, InsertionOrder.Default, InsertionBehavior.ThrowOnExisting);
+    void ICollection<TKey>.Add(TKey key) {
+        TryPut(key, PutBehavior.None);
+    }
+
+    public bool Add(TKey key) {
+        return TryPut(key, PutBehavior.None);
+    }
+
+    public void AddFirst(TKey key) {
+        bool modified = TryPut(key, PutBehavior.MoveToFirst);
         Debug.Assert(modified);
     }
 
-    /// <summary>
-    /// 如果key已经存在，则抛出异常
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <exception cref="ArgumentException">如果key已经存在</exception>
-    public void Add(TKey key, TValue value) {
-        bool modified = TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.ThrowOnExisting);
+    public void AddLast(TKey key) {
+        bool modified = TryPut(key, PutBehavior.MoveToLast);
         Debug.Assert(modified);
     }
 
-    /// <summary>
-    /// 如果key不存在则添加成功并返回true，否则返回false
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns>是否添加成功</returns>
-    public bool TryAdd(TKey key, TValue value) {
-        return TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.None);
-    }
-
-    public void AddFirst(TKey key, TValue value) {
-        bool modified = TryInsert(key, value, InsertionOrder.Head, InsertionBehavior.ThrowOnExisting);
-        Debug.Assert(modified);
-    }
-
-    public bool TryAddFirst(TKey key, TValue value) {
-        return TryInsert(key, value, InsertionOrder.Head, InsertionBehavior.None);
-    }
-
-    public void AddLast(TKey key, TValue value) {
-        bool modified = TryInsert(key, value, InsertionOrder.Tail, InsertionBehavior.ThrowOnExisting);
-        Debug.Assert(modified);
-    }
-
-    public bool TryAddLast(TKey key, TValue value) {
-        return TryInsert(key, value, InsertionOrder.Tail, InsertionBehavior.None);
-    }
-
-    public PutResult<TValue> Put(TKey key, TValue value) {
-        return TryPut(key, value, PutBehavior.None);
-    }
-
-    public PutResult<TValue> PutFirst(TKey key, TValue value) {
-        return TryPut(key, value, PutBehavior.MoveToFirst);
-    }
-
-    public PutResult<TValue> PutLast(TKey key, TValue value) {
-        return TryPut(key, value, PutBehavior.MoveToLast);
-    }
-
-    public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
-        InsertRange(collection, InsertionBehavior.ThrowOnExisting);
-    }
-
-    public void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
-        InsertRange(collection, InsertionBehavior.OverwriteExisting);
-    }
-
-    private void InsertRange(IEnumerable<KeyValuePair<TKey, TValue>> collection, InsertionBehavior behavior) {
+    public bool AddRange(IEnumerable<TKey> collection) {
         if (collection == null) throw new ArgumentNullException(nameof(collection));
-        if (collection is ICollection<KeyValuePair<TKey, TValue>> c) {
+        if (collection is ICollection<TKey> c) {
             if (_loadFactor <= 0.5f) {
                 EnsureCapacity(c.Count); // 负载小于0.5，数组的长度将大于等于count的2倍，就能放下所有元素
             }
@@ -371,23 +169,16 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                 TryCapacity(_count + c.Count);
             }
         }
-        foreach (KeyValuePair<TKey, TValue> pair in collection) {
-            TryInsert(pair.Key, pair.Value, InsertionOrder.Default, behavior);
+        bool r = false;
+        foreach (TKey key in collection) {
+            r = TryPut(key, PutBehavior.None);
         }
+        return r;
     }
 
     #endregion
 
     #region remove
-
-    public bool Remove(KeyValuePair<TKey, TValue> item) {
-        var node = GetNode(item.Key);
-        if (node != null && ValComparer.Equals(node._value, item.Value)) {
-            RemoveNode(node);
-            return true;
-        }
-        return false;
-    }
 
     public bool Remove(TKey key) {
         var node = GetNode(key);
@@ -398,32 +189,21 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return true;
     }
 
-    public bool Remove(TKey key, out TValue value) {
-        var node = GetNode(key);
-        if (node == null) {
-            value = default;
-            return false;
-        }
-        value = node._value;
-        RemoveNode(node);
-        return true;
-    }
-
-    public KeyValuePair<TKey, TValue> RemoveFirst() {
-        if (TryRemoveFirst(out KeyValuePair<TKey, TValue> r)) {
+    public TKey RemoveFirst() {
+        if (TryRemoveFirst(out TKey r)) {
             return r;
         }
-        throw DictionaryEmptyException();
+        throw CollectionEmptyException();
     }
 
-    public bool TryRemoveFirst(out KeyValuePair<TKey, TValue> pair) {
+    public bool TryRemoveFirst(out TKey pair) {
         Node oldHead = _head;
         if (oldHead == null) {
             pair = default;
             return false;
         }
 
-        pair = oldHead.AsPair();
+        pair = oldHead._key;
         _count--;
         _version++;
         FixPointers(oldHead);
@@ -432,20 +212,20 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return true;
     }
 
-    public KeyValuePair<TKey, TValue> RemoveLast() {
-        if (TryRemoveLast(out KeyValuePair<TKey, TValue> r)) {
+    public TKey RemoveLast() {
+        if (TryRemoveLast(out TKey r)) {
             return r;
         }
-        throw DictionaryEmptyException();
+        throw CollectionEmptyException();
     }
 
-    public bool TryRemoveLast(out KeyValuePair<TKey, TValue> pair) {
+    public bool TryRemoveLast(out TKey pair) {
         Node oldTail = _tail;
         if (oldTail == null) {
             pair = default;
             return false;
         }
-        pair = oldTail.AsPair();
+        pair = oldTail._key;
 
         _count--;
         _version++;
@@ -542,110 +322,50 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #region copyto
 
-    public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) {
+    public void CopyTo(TKey[] array, int arrayIndex) {
         CopyTo(array, arrayIndex, false);
     }
 
-    public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex, bool reversed) {
+    public void CopyTo(TKey[] array, int arrayIndex, bool reversed) {
         if (array == null) throw new ArgumentNullException(nameof(array));
         if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
 
         if (reversed) {
             for (Node e = _tail; e != null; e = e._prev) {
-                array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
+                array[arrayIndex++] = e._key;
             }
         }
         else {
             for (Node e = _head; e != null; e = e._next) {
-                array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
+                array[arrayIndex++] = e._key;
             }
         }
     }
 
     public void CopyTo(Array array, int arrayIndex) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-        if (array.Rank != 1) throw new ArgumentException("RankMultiDimNotSupported");
-
-        if (array is KeyValuePair<TKey, TValue>[] pairs) {
-            CopyTo(pairs, arrayIndex);
-        }
-        else if (array is DictionaryEntry[] dictEntryArray) {
-            for (Node e = _head; e != null; e = e._next) {
-                dictEntryArray[arrayIndex++] = new DictionaryEntry(e._key, e._value);
-            }
-        }
-        else {
-            object[]? objects = array as object[];
-            if (objects == null) throw new ArgumentException("InvalidArrayType");
-            for (Node e = _head; e != null; e = e._next) {
-                objects[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
-            }
-        }
+        CopyTo(array, arrayIndex, false);
     }
 
-    public void CopyKeysTo(TKey[] array, int arrayIndex, bool reversed) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-
-        if (reversed) {
-            for (Node e = _tail; e != null; e = e._prev) {
-                array[arrayIndex++] = e._key;
-            }
-        }
-        else {
-            for (Node e = _head; e != null; e = e._next) {
-                array[arrayIndex++] = e._key;
-            }
-        }
-    }
-
-    private void CopyKeysTo(Array array, int arrayIndex) {
+    public void CopyTo(Array array, int arrayIndex, bool reversed) {
         if (array == null) throw new ArgumentNullException(nameof(array));
         if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
         if (array.Rank != 1) throw new ArgumentException("RankMultiDimNotSupported");
 
         if (array is TKey[] castArray) {
-            CopyKeysTo(castArray, arrayIndex, false);
+            CopyTo(castArray, arrayIndex, reversed);
         }
         else {
             object[]? objects = array as object[];
             if (objects == null) throw new ArgumentException("InvalidArrayType");
-            for (Node e = _head; e != null; e = e._next) {
-                objects[arrayIndex++] = e._key;
+            if (reversed) {
+                for (Node e = _tail; e != null; e = e._prev) {
+                    objects[arrayIndex++] = e._key;
+                }
             }
-        }
-    }
-
-    public void CopyValuesTo(TValue[] array, int arrayIndex, bool reversed) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-
-        if (reversed) {
-            for (Node e = _tail; e != null; e = e._prev) {
-                array[arrayIndex++] = e._value;
-            }
-        }
-        else {
-            for (Node e = _head; e != null; e = e._next) {
-                array[arrayIndex++] = e._value;
-            }
-        }
-    }
-
-    private void CopyValuesTo(Array array, int arrayIndex) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-        if (array.Rank != 1) throw new ArgumentException("RankMultiDimNotSupported");
-
-        if (array is TValue[] castArray) {
-            CopyValuesTo(castArray, arrayIndex);
-        }
-        else {
-            object[]? objects = array as object[];
-            if (objects == null) throw new ArgumentException("InvalidArrayType");
-            for (Node e = _head; e != null; e = e._next) {
-                objects[arrayIndex++] = e._value;
+            else {
+                for (Node e = _head; e != null; e = e._next) {
+                    objects[arrayIndex++] = e._key;
+                }
             }
         }
     }
@@ -698,7 +418,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
         int mask = _mask;
         IEqualityComparer<TKey> keyComparer = _keyComparer;
-        int hash = HashCommon.Mix(keyComparer.GetHashCode(key));
+        int hash = HashCommon.Mix(key == null ? 0 : keyComparer.GetHashCode(key));
         // 先测试无冲突位置
         int pos = mask & hash;
         Node node = table[pos];
@@ -717,67 +437,39 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         throw new InvalidOperationException("state error");
     }
 
-    private bool TryInsert(TKey key, TValue value, InsertionOrder order, InsertionBehavior behavior) {
-        if (key == null) throw new ArgumentNullException(nameof(key));
-
-        int hash = HashCommon.Mix(_keyComparer.GetHashCode(key));
+    /** 如果是新key则返回true */
+    private bool TryPut(TKey? key, PutBehavior behavior) {
+        int hash = HashCommon.Mix(key == null ? 0 : _keyComparer.GetHashCode(key));
         int pos = Find(key, hash);
         if (pos >= 0) {
             Node existNode = _table![pos]!;
-            switch (behavior) {
-                case InsertionBehavior.OverwriteExisting: {
-                    existNode._value = value;
-                    return true;
-                }
-                case InsertionBehavior.ThrowOnExisting: {
-                    throw new InvalidOperationException("AddingDuplicateWithKey: " + key);
-                }
-                case InsertionBehavior.None:
-                default: return false;
-            }
-        }
-
-        pos = -pos - 1;
-        Insert(pos, hash, key, value, order);
-        return true;
-    }
-
-    private PutResult<TValue> TryPut(TKey key, TValue value, PutBehavior behavior) {
-        if (key == null) throw new ArgumentNullException(nameof(key));
-
-        int hash = HashCommon.Mix(_keyComparer.GetHashCode(key));
-        int pos = Find(key, hash);
-        if (pos >= 0) {
-            Node existNode = _table![pos]!;
-            PutResult<TValue> result = new PutResult<TValue>(false, existNode._value);
-            existNode._value = value;
             if (behavior == PutBehavior.MoveToLast) {
                 MoveToLast(existNode);
             }
             else if (behavior == PutBehavior.MoveToFirst) {
                 MoveToFirst(existNode);
             }
-            return result;
+            return false;
         }
 
         pos = -pos - 1;
         switch (behavior) {
             case PutBehavior.MoveToFirst:
-                Insert(pos, hash, key, value, InsertionOrder.Head);
+                Insert(pos, hash, key, InsertionOrder.Head);
                 break;
             case PutBehavior.MoveToLast:
-                Insert(pos, hash, key, value, InsertionOrder.Tail);
+                Insert(pos, hash, key, InsertionOrder.Tail);
                 break;
             case PutBehavior.None:
             default:
-                Insert(pos, hash, key, value, InsertionOrder.Default);
+                Insert(pos, hash, key, InsertionOrder.Default);
                 break;
         }
-        return PutResult<TValue>.Insert;
+        return true;
     }
 
-    private void Insert(int pos, int hash, TKey key, TValue value, InsertionOrder order) {
-        Node node = new Node(hash, key, value, pos);
+    private void Insert(int pos, int hash, TKey key, InsertionOrder order) {
+        Node node = new Node(hash, key, pos);
         if (_count == 0) {
             _head = _tail = node;
         }
@@ -948,89 +640,99 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #endregion
 
-    #region keys/values
+    #region reversed
 
-    private class KeyCollection : IGenericCollection<TKey>
+    public ISequencedSet<TKey> Reversed() {
+        return new ReversedSetView(this);
+    }
+
+    private class ReversedSetView : ISequencedSet<TKey>
     {
-        private readonly LinkedDictionary<TKey, TValue> _dictionary;
+        private readonly LinkedHashSet<TKey> _hashSet;
 
-        public KeyCollection(LinkedDictionary<TKey, TValue> dictionary) {
-            _dictionary = dictionary;
+        public ReversedSetView(LinkedHashSet<TKey> hashSet) {
+            _hashSet = hashSet;
         }
 
-        public int Count => _dictionary.Count;
+        public int Count => _hashSet.Count();
         public bool IsReadOnly => true;
         public bool IsSynchronized => false;
-        public object SyncRoot => _dictionary.SyncRoot;
+        public object SyncRoot => _hashSet.SyncRoot;
+
+        public bool PeekFirst(out TKey item) {
+            return _hashSet.PeekLast(out item);
+        }
+
+        public TKey First => _hashSet.Last;
+
+        public bool PeekLast(out TKey item) {
+            return _hashSet.PeekFirst(out item);
+        }
+
+        public TKey Last => _hashSet.First;
 
         public bool Contains(TKey item) {
-            return item != null && _dictionary.ContainsKey(item);
-        }
-
-        public void CopyTo(TKey[] array, int arrayIndex) {
-            _dictionary.CopyKeysTo(array, arrayIndex, false);
-        }
-
-        public void CopyTo(Array array, int index) {
-            _dictionary.CopyKeysTo(array, index);
-        }
-
-        public IEnumerator<TKey> GetEnumerator() {
-            return new KeyIterator(_dictionary, false);
-        }
-
-        public void Add(TKey item) {
-            throw new InvalidOperationException("NotSupported_KeyCollectionSet");
-        }
-
-        public void Clear() {
-            throw new InvalidOperationException("NotSupported_KeyCollectionSet");
+            return _hashSet.Contains(item);
         }
 
         public bool Remove(TKey item) {
-            throw new InvalidOperationException("NotSupported_KeyCollectionSet");
-        }
-    }
-
-    private class ValueCollection : IGenericCollection<TValue>
-    {
-        private readonly LinkedDictionary<TKey, TValue> _dictionary;
-
-        public ValueCollection(LinkedDictionary<TKey, TValue> dictionary) {
-            _dictionary = dictionary;
+            return _hashSet.Remove(item);
         }
 
-        public int Count => _dictionary.Count;
-        public bool IsReadOnly => true;
-        public bool IsSynchronized => false;
-        public object SyncRoot => _dictionary.SyncRoot;
-
-        public bool Contains(TValue item) {
-            return _dictionary.ContainsValue(item);
+        void ICollection<TKey>.Add(TKey item) {
+            _hashSet.Add(item); // 不颠倒顺序
         }
 
-        public void CopyTo(TValue[] array, int arrayIndex) {
-            _dictionary.CopyValuesTo(array, arrayIndex, false);
+        bool IGenericSet<TKey>.Add(TKey item) {
+            return _hashSet.Add(item); // 不颠倒顺序
+        }
+
+        public void AddFirst(TKey item) {
+            _hashSet.AddLast(item);
+        }
+
+        public void AddLast(TKey item) {
+            _hashSet.AddFirst(item);
+        }
+
+        public TKey RemoveFirst() {
+            return _hashSet.RemoveLast();
+        }
+
+        public bool TryRemoveFirst(out TKey item) {
+            return _hashSet.TryRemoveLast(out item);
+        }
+
+        public TKey RemoveLast() {
+            return _hashSet.RemoveFirst();
+        }
+
+        public bool TryRemoveLast(out TKey item) {
+            return _hashSet.TryRemoveFirst(out item);
+        }
+
+        public void CopyTo(TKey[] array, int arrayIndex) {
+            _hashSet.CopyTo(array, arrayIndex, true);
         }
 
         public void CopyTo(Array array, int index) {
-            _dictionary.CopyValuesTo(array, index);
-        }
-
-        public IEnumerator<TValue> GetEnumerator() {
-            return new ValueIterator(_dictionary, false);
-        }
-
-        public void Add(TValue item) {
-            throw new InvalidOperationException("NotSupported_ValueCollectionSet");
+            _hashSet.CopyTo(array, index, true);
         }
 
         public void Clear() {
-            throw new InvalidOperationException("NotSupported_ValueCollectionSet");
+            _hashSet.Clear();
         }
 
-        public bool Remove(TValue item) {
-            throw new InvalidOperationException("NotSupported_ValueCollectionSet");
+        public IEnumerator<TKey> GetEnumerator() {
+            return _hashSet.GetReversedEnumerator();
+        }
+
+        public IEnumerator<TKey> GetReversedEnumerator() {
+            return _hashSet.GetEnumerator();
+        }
+
+        public ISequencedSet<TKey> Reversed() {
+            return _hashSet;
         }
     }
 
@@ -1038,27 +740,27 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #region itr
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
-        return new PairIterator(this, false);
+    public IEnumerator<TKey> GetEnumerator() {
+        return new SetIterator(this, false);
     }
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetReversedEnumerator() {
-        return new PairIterator(this, true);
+    public IEnumerator<TKey> GetReversedEnumerator() {
+        return new SetIterator(this, true);
     }
 
-    private static readonly Node UnsetNode = new Node(0, default, default, -1);
-    private static readonly Node DisposedNode = new Node(0, default, default, -1);
+    private static readonly Node UnsetNode = new Node(0, default, -1);
+    private static readonly Node DisposedNode = new Node(0, default, -1);
 
-    private abstract class AbstractIterator<T> : IEnumerator<T>
+    private class SetIterator : IEnumerator<TKey>
     {
-        private readonly LinkedDictionary<TKey, TValue> _dictionary;
+        private readonly LinkedHashSet<TKey> _dictionary;
         private readonly bool _reversed;
 
         private int _version;
         private Node? _node;
-        private T _current;
+        private TKey _current;
 
-        protected AbstractIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) {
+        internal SetIterator(LinkedHashSet<TKey> dictionary, bool reversed) {
             _dictionary = dictionary;
             _reversed = reversed;
             _version = dictionary._version;
@@ -1085,11 +787,9 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                 return false;
             }
             // 其实这期间node的value可能变化，安全的话应该每次创建新的Pair，但c#系统库没这么干
-            _current = CurrentOfNode(_node);
+            _current = _node._key;
             return true;
         }
-
-        protected abstract T CurrentOfNode(Node node);
 
         public void Reset() {
             if (_version != _dictionary._version) {
@@ -1099,41 +799,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             _current = default;
         }
 
-        public T Current => _current;
+        public TKey Current => _current;
 
         object IEnumerator.Current => Current;
 
         public void Dispose() {
-        }
-    }
-
-    private class PairIterator : AbstractIterator<KeyValuePair<TKey, TValue>>
-    {
-        public PairIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) : base(dictionary, reversed) {
-        }
-
-        protected override KeyValuePair<TKey, TValue> CurrentOfNode(Node node) {
-            return new KeyValuePair<TKey, TValue>(node._key, node._value);
-        }
-    }
-
-    private class KeyIterator : AbstractIterator<TKey>
-    {
-        public KeyIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) : base(dictionary, reversed) {
-        }
-
-        protected override TKey CurrentOfNode(Node node) {
-            return node._key;
-        }
-    }
-
-    private class ValueIterator : AbstractIterator<TValue>
-    {
-        public ValueIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) : base(dictionary, reversed) {
-        }
-
-        protected override TValue CurrentOfNode(Node node) {
-            return node._value;
         }
     }
 
@@ -1146,32 +816,22 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         /** 由于Key的hash使用频率极高，缓存以减少求值开销 */
         internal readonly int _hash;
         internal readonly TKey _key;
-        internal TValue? _value;
         /** 由于使用线性探测法，删除的元素不一定直接位于hash槽上，需要记录，以便快速删除；-1表示已删除 */
         internal int _index;
 
         internal Node? _prev;
         internal Node? _next;
 
-        public Node(int hash, TKey key, TValue value, int index) {
+        public Node(int hash, TKey key, int index) {
             _hash = hash;
             _key = key;
-            _value = value;
             _index = index;
         }
 
         public void AfterRemoved() {
-            if (!ValueIsValueType) {
-                _value = default;
-            }
             _index = -1;
             _prev = null;
             _next = null;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyValuePair<TKey, TValue> AsPair() {
-            return new KeyValuePair<TKey, TValue>(_key, _value);
         }
 
         public override int GetHashCode() {
@@ -1183,7 +843,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         public bool Equals(Node? other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return EqualityComparer<TKey>.Default.Equals(_key, other._key) && EqualityComparer<TValue>.Default.Equals(_value, other._value);
+            return EqualityComparer<TKey>.Default.Equals(_key, other._key);
         }
 
         public override bool Equals(object? obj) {
@@ -1202,7 +862,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         public override string ToString() {
-            return $"{nameof(_key)}: {_key}, {nameof(_value)}: {_value}";
+            return $"{nameof(_key)}: {_key}";
         }
 
         #endregion
@@ -1215,7 +875,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     private const string Names_InitMask = "InitMask";
     private const string Names_LoadFactor = "LoadFactor";
     private const string Names_Comparer = "Comparer";
-    private const string Names_Pairs = "KeyValuePairs";
+    private const string Names_Keys = "Keys";
 
     public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
         if (info == null) throw new ArgumentNullException(nameof(info));
@@ -1224,13 +884,13 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         info.AddValue(Names_LoadFactor, _loadFactor);
         info.AddValue(Names_Comparer, _keyComparer, typeof(IEqualityComparer<TKey>));
         if (_table != null && _count > 0) { // 有数据才序列化
-            var array = new KeyValuePair<TKey, TValue>[Count];
+            var array = new TKey[Count];
             CopyTo(array, 0, false);
-            info.AddValue(Names_Pairs, array, typeof(KeyValuePair<TKey, TValue>[]));
+            info.AddValue(Names_Keys, array, typeof(TKey[]));
         }
     }
 
-    protected LinkedDictionary(SerializationInfo info, StreamingContext context) {
+    protected LinkedHashSet(SerializationInfo info, StreamingContext context) {
         this._initMask = info.GetInt32(Names_InitMask);
         this._loadFactor = info.GetSingle(Names_LoadFactor);
         this._keyComparer = (IEqualityComparer<TKey>)info.GetValue(Names_Comparer, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
@@ -1238,11 +898,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             throw new SerializationException("invalid serial data");
         }
 
-        KeyValuePair<TKey, TValue>[] keyValuePairs = (KeyValuePair<TKey, TValue>[])info.GetValue(Names_Pairs, typeof(KeyValuePair<TKey, TValue>[]));
-        if (keyValuePairs != null && keyValuePairs.Length > 0) {
-            _mask = HashCommon.ArraySize(keyValuePairs.Length, _loadFactor) - 1;
+        TKey[] keys = (TKey[])info.GetValue(Names_Keys, typeof(TKey[]));
+        if (keys != null && keys.Length > 0) {
+            _mask = HashCommon.ArraySize(keys.Length, _loadFactor) - 1;
             _maxFill = HashCommon.MaxFill(_mask + 1, _loadFactor);
-            BuildTable(keyValuePairs);
+            BuildTable(keys);
         }
         else {
             _mask = _initMask;
@@ -1250,20 +910,20 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private void BuildTable(KeyValuePair<TKey, TValue>[] keyValuePairs) {
+    private void BuildTable(TKey[] keyArray) {
         // 构建Node链
         IEqualityComparer<TKey> keyComparer = _keyComparer;
         Node head;
         {
-            KeyValuePair<TKey, TValue> pair = keyValuePairs[0];
-            int hash = HashCommon.Mix(keyComparer.GetHashCode(pair.Key));
-            head = new Node(hash, pair.Key, pair.Value, -1);
+            TKey key = keyArray[0];
+            int hash = HashCommon.Mix(key == null ? 0 : keyComparer.GetHashCode(key));
+            head = new Node(hash, key, -1);
         }
         Node tail = head;
-        for (var i = 1; i < keyValuePairs.Length; i++) {
-            KeyValuePair<TKey, TValue> pair = keyValuePairs[i];
-            int hash = HashCommon.Mix(keyComparer.GetHashCode(pair.Key));
-            Node next = new Node(hash, pair.Key, pair.Value, -1);
+        for (var i = 1; i < keyArray.Length; i++) {
+            TKey key = keyArray[i];
+            int hash = HashCommon.Mix(key == null ? 0 : keyComparer.GetHashCode(key));
+            Node next = new Node(hash, key, -1);
             //
             tail._next = next;
             next._prev = tail;
@@ -1285,7 +945,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             node._index = pos;
         }
         _table = newTable;
-        _count = keyValuePairs.Length;
+        _count = keyArray.Length;
     }
 
     #endregion

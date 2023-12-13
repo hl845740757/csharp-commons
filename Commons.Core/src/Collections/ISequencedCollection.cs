@@ -18,77 +18,86 @@
 
 namespace Wjybxx.Commons.Collections;
 
-public interface ISequencedCollection<TKey> : IGenericCollection<TKey>
+public interface ISequencedCollection<T> : IGenericCollection<T>
 {
     /// <summary>
     /// 返回一个当前集合的逆序视图
+    /// 对逆序视图的AddFirst、AddLast、RemoveFirst、RemoveLast等明确方向的操作将颠倒，
+    /// 而普通的Add方法将不受影响。
     /// </summary>
     /// <returns></returns>
-    ISequencedCollection<TKey> Reversed();
+    ISequencedCollection<T> Reversed();
+
+    /// <summary>
+    /// 获取逆序迭代器
+    /// (也可通过Reversed视图拿到，这是个快捷方法)
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator<T> GetReversedEnumerator();
 
     /// <summary>
     /// 查看集合的首个元素
     /// </summary>
     /// <param name="item"></param>
     /// <returns>如果集合不为空则返回true</returns>
-    public bool PeekFirst(out TKey item);
+    public bool PeekFirst(out T item);
 
     /// <summary>
     /// 获取集合首部元素
     /// </summary>
     /// <exception cref="InvalidOperationException">如果集合为空</exception>
-    public TKey First { get; }
+    public T First { get; }
 
     /// <summary>
     /// 查看集合的末尾元素
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    public bool PeekLast(out TKey item);
+    public bool PeekLast(out T item);
 
     /// <summary>
     /// 获取集合尾部元素
     /// </summary>
     /// <exception cref="InvalidOperationException">如果集合为空</exception>
-    public TKey Last { get; }
+    public T Last { get; }
 
     /// <summary>
     /// 添加元素到集合的首部
     /// </summary>
     /// <param name="item"></param>
-    void AddFirst(TKey item);
+    void AddFirst(T item);
 
     /// <summary>
     /// 添加元素到集合的尾部
     /// </summary>
     /// <param name="item"></param>
-    void AddLast(TKey item);
+    void AddLast(T item);
 
     /// <summary>
     /// 移除首部的元素
     /// </summary>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">如果集合为空</exception>
-    TKey RemoveFirst();
+    T RemoveFirst();
 
     /// <summary>
     /// 尝试删除集合的首部元素，如果集合为空，则返回false
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    bool TryRemoveFirst(out TKey item);
+    bool TryRemoveFirst(out T item);
 
     /// <summary>
     /// 移除尾部的元素
     /// </summary>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">如果集合为空</exception>
-    TKey RemoveLast();
+    T RemoveLast();
 
     /// <summary>
     /// 尝试删除集合的尾部元素，如果集合为空，则返回false
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    bool TryRemoveLast(out TKey item);
+    bool TryRemoveLast(out T item);
 }
