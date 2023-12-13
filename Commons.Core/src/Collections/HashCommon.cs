@@ -43,6 +43,7 @@ public static class HashCommon
         return (int)(h ^ (h >> 16));
     }
 
+    /** 计算最大承载数，返回值一定小于capacity */
     public static int MaxFill(int capacity, float factor) {
         /* We must guarantee that there is always at least
          * one free entry (even with pathological load factors). */

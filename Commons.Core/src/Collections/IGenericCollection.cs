@@ -23,6 +23,19 @@ namespace Wjybxx.Commons.Collections;
 
 public interface IGenericCollection<T> : ICollection<T>, ICollection, IReadOnlyCollection<T>
 {
+    /// <summary>
+    /// 批量添加元素
+    /// 1.该接口层面不要求原子性，子类实现可以有更强的约束。
+    /// 2.C#的原始Add接口是没有返回值的，因此这里也无法设定返回值。
+    /// </summary>
+    /// <param name="collection"></param>
+    void AddRange(IEnumerable<T> collection) {
+        if (collection == null) throw new ArgumentNullException(nameof(collection));
+        foreach (var e in collection) {
+            Add(e);
+        }
+    }
+
     #region 接口适配
 
     IEnumerator IEnumerable.GetEnumerator() {

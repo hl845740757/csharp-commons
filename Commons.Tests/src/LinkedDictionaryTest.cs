@@ -27,10 +27,10 @@ public class LinkedDictionaryTest
     public void TestDic() {
         HashSet<int> keySet = new HashSet<int>(10240);
         List<int> keyList = new List<int>(10240);
-        LinkedDictionary<int, string> dictionary = new LinkedDictionary<int, string>(10240);
+        LinkedDictionary<int, string> dictionary = new LinkedDictionary<int, string>(548);
 
         while (keySet.Count < 10000) {
-            if (Random.Shared.Next(0, 2) == 1 && keyList.Count > 1000) {
+            if (Random.Shared.Next(0, 10) == 1 && keyList.Count > 1000) {
                 int idx = Random.Shared.Next(0, keyList.Count);
                 int key = keyList[idx];
                 keyList.RemoveAt(idx);
@@ -44,6 +44,7 @@ public class LinkedDictionaryTest
                 dictionary[next] = next.ToString();
             }
         }
+        Assert.AreEqual(keyList.Count, keySet.Count);
         Assert.AreEqual(keyList.Count, dictionary.Count);
         int index = 0;
         foreach (KeyValuePair<int, string> pair in dictionary) {

@@ -31,13 +31,15 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 {
     #region peek
 
+    public bool PeekFirstPair(out KeyValuePair<TKey, TValue> pair);
+
     public KeyValuePair<TKey, TValue> FirstPair { get; }
     public TKey FirstKey { get; }
-    public TValue FirstValue { get; }
+
+    public bool PeekLastPair(out KeyValuePair<TKey, TValue> pair);
 
     public KeyValuePair<TKey, TValue> LastPair { get; }
     public TKey LastKey { get; }
-    public TValue LastValue { get; }
 
     /// <summary>
     /// 获取key关联的值，如果关联的值不存在，则返回预设的默认值。
@@ -60,9 +62,23 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// 获取元素，并将元素移动到首部
     /// </summary>
     /// <param name="key"></param>
+    /// <returns>如果key存在，则返回关联值</returns>
+    public TValue GetAndMoveToFirst(TKey key);
+
+    /// <summary>
+    /// 获取元素，并将元素移动到首部
+    /// </summary>
+    /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns>如果元素存在则返回true</returns>
-    public bool GetAndMoveToFirst(TKey key, out TValue value);
+    public bool TryGetAndMoveToFirst(TKey key, out TValue value);
+
+    /// <summary>
+    /// 获取元素，并将元素移动到尾部
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns>如果key存在，则返回关联值</returns>
+    public TValue GetAndMoveToLast(TKey key);
 
     /// <summary>
     /// 获取元素，并将元素移动到尾部
@@ -70,7 +86,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns>如果元素存在则返回true</returns>
-    public bool GetAndMoveToLast(TKey key, out TValue value);
+    public bool TryGetAndMoveToLast(TKey key, out TValue value);
 
     #endregion
 
@@ -169,7 +185,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 
     /// <summary>
     /// 获取反向迭代器
-    /// 暂时不打算定义复杂Collection接口，即使以后添加，该接口也可以作为常用的快捷方法。
+    /// (标准点的话应该创建Reversed视图，但复杂度较高，暂不想实现；即使以后添加，该接口也可以作为常用的快捷方法。)
     /// </summary>
     /// <returns></returns>
     IEnumerator<KeyValuePair<TKey, TValue>> GetReversedEnumerator();

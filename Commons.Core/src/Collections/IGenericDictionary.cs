@@ -22,11 +22,11 @@ using System.Runtime.CompilerServices;
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// C#在提供了泛型实现后，集合和字典的接口键值一团乱麻
+/// C#在提供了泛型实现后，集合和字典的接口简直一团乱麻
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
-public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary
+public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary, IGenericCollection<KeyValuePair<TKey, TValue>>
 {
     new IGenericCollection<TKey> Keys { get; }
     new IGenericCollection<TValue> Values { get; }
@@ -40,12 +40,37 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     bool ContainsValue(TValue value);
 
     /// <summary>
+    /// 如果key不存在，则插入键值对并发那会true，否则返回false
+    /// </summary>
+    /// <returns>插入成功则返回true</returns>
+    bool TryAdd(TKey key, TValue value);
+
+    /// <summary>
     /// 与Add不同，Put操作在Key存在值，总是覆盖当前关联值，而不是抛出异常
     /// </summary>
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
     PutResult<TValue> Put(TKey key, TValue value);
+
+    /// <summary>
+    /// 批量插入
+    /// 如果key已存在则覆盖
+    /// </summary>
+    /// <param name="collection"></param>
+    void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection);
+
+    /// <summary>
+    /// 调整空间
+    /// 1.该接口以允许用户触发扩容
+    /// 2.Hash结构通常有较大的辅助空间，提供接口以允许收缩；
+    /// 3.该接口不一定产生效用，与实现类相关，默认空实现
+    /// 4.该接口可能有较大开销，应避免频繁调用
+    /// </summary>
+    /// <param name="expectedCount">期望的元素数量，不是直接的空间大小，不可小于当前count</param>
+    /// <param name="ignoreInitCount">是否允许小于初始设置的元素数量</param>
+    void AdjustCapacity(int expectedCount, bool ignoreInitCount = false) {
+    }
 
     #region 接口适配
 

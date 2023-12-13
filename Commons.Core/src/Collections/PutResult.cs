@@ -41,12 +41,7 @@ public readonly struct PutResult<TValue>
 
     /// <summary>
     /// Key关联的旧值
+    /// （key不存在的情况下，可能返回预设的默认值）
     /// </summary>
-    /// <exception cref="InvalidOperationException"></exception>
-    public TValue PrevValue {
-        get {
-            if (_hasValue) return _prevValue;
-            throw new InvalidOperationException("NoValue");
-        }
-    }
+    public TValue PrevValue => _prevValue;
 }
