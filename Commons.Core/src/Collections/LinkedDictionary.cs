@@ -117,12 +117,26 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     bool IDictionary.IsFixedSize => false;
     bool IDictionary.IsReadOnly => false;
 
-    public IGenericCollection<TKey> Keys => _keys ?? new KeyCollection(this);
-    public IGenericCollection<TValue> Values => _values ?? new ValueCollection(this);
-    ICollection<TKey> IDictionary<TKey, TValue>.Keys => _keys ?? new KeyCollection(this);
-    ICollection<TValue> IDictionary<TKey, TValue>.Values => _values ?? new ValueCollection(this);
-    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => _keys ?? new KeyCollection(this);
-    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => _values ?? new ValueCollection(this);
+    public IGenericCollection<TKey> Keys => CachedKeys();
+    public IGenericCollection<TValue> Values => CachedValues();
+    ICollection<TKey> IDictionary<TKey, TValue>.Keys => CachedKeys();
+    ICollection<TValue> IDictionary<TKey, TValue>.Values => CachedValues();
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => CachedKeys();
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => CachedValues();
+
+    private KeyCollection CachedKeys() {
+        if (_keys == null) {
+            _keys = new KeyCollection(this);
+        }
+        return _keys;
+    }
+
+    private ValueCollection CachedValues() {
+        if (_values == null) {
+            _values = new ValueCollection(this);
+        }
+        return _values;
+    }
 
     public TValue this[TKey key] {
         get {
