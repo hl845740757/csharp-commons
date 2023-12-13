@@ -774,7 +774,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             }
             newTable[pos] = node;
             node._index = pos;
-            if (remain-- == 0) {
+            if (--remain == 0) {
                 break;
             }
         }
