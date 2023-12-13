@@ -52,7 +52,7 @@ public static class HashCommon
 
     public static int ArraySize(int expected, float f) {
         long s = Math.Max(MinArraySize, NextPowerOfTwo((long)Math.Ceiling(expected / f)));
-        if (s > (1 << 30)) throw new ArgumentException("Too large (" + expected + " expected elements with load factor " + f + ")");
+        if (s > MaxArraySize) throw new ArgumentException("Too large (" + expected + " expected elements with load factor " + f + ")");
         return (int)s;
     }
 
