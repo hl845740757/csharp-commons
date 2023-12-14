@@ -28,8 +28,6 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
 
     public int Count => _delegated.Count();
     public bool IsReadOnly => true;
-    public bool IsSynchronized => false;
-    public object SyncRoot => _delegated.SyncRoot;
 
     public virtual ISequencedCollection<TKey> Reversed() {
         return _delegated;
@@ -57,8 +55,8 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
 
     #region add
 
-    void ICollection<TKey>.Add(TKey item) {
-        _delegated.Add(item); // 不颠倒顺序
+    public virtual void Add(TKey item) {
+        _delegated.Add(item); // add默认不修改方向，但允许重写
     }
 
     public void AddFirst(TKey item) {
@@ -74,7 +72,7 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
     #region remove
 
     public bool Remove(TKey item) {
-        return _delegated.Remove(item);
+        return _delegated.Remove(item); // 不颠倒顺序
     }
 
     public TKey RemoveFirst() {
@@ -107,10 +105,6 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
 
     public void CopyTo(TKey[] array, int arrayIndex, bool reversed) {
         _delegated.CopyTo(array, arrayIndex, !reversed); // 取反
-    }
-
-    public void CopyTo(Array array, int index) {
-        _delegated.CopyTo(array, index);
     }
 
     #endregion

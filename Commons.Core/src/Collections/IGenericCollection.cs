@@ -21,7 +21,13 @@ using System.Runtime.CompilerServices;
 
 namespace Wjybxx.Commons.Collections;
 
-public interface IGenericCollection<T> : ICollection<T>, ICollection
+/// <summary>
+/// C#在提供了泛型实现后，集合和字典的接口简直一团乱麻；
+/// 我尝试继承非泛型接口，但C#的接口规则与java不同，在接口冲突时(有相同签名的方法时)，需要重定义方法以隐藏父接口方法，
+/// 会导致非常多的方法，实在让人不爽。
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public interface IGenericCollection<T> : ICollection<T>, IReadOnlyCollection<T>
 {
     public new int Count { get; }
 
@@ -40,12 +46,12 @@ public interface IGenericCollection<T> : ICollection<T>, ICollection
 
     #region 接口适配
 
+    int ICollection<T>.Count => Count;
+    int IReadOnlyCollection<T>.Count => Count;
+
     IEnumerator IEnumerable.GetEnumerator() {
         return GetEnumerator();
     }
-
-    int ICollection.Count => Count;
-    int ICollection<T>.Count => Count;
 
     #endregion
 

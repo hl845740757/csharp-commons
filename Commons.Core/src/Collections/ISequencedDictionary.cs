@@ -18,20 +18,22 @@
 
 namespace Wjybxx.Commons.Collections;
 
-/// <summary>
-///
-/// 1.按照C#的习惯，当元素不存在时默认抛出异常
-/// 2.未来可扩展查询下一个key的方法
-/// </summary>
-/// <typeparam name="TKey"></typeparam>
-/// <typeparam name="TValue"></typeparam>
 public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, TValue>, ISequencedCollection<KeyValuePair<TKey, TValue>>
 {
-    #region peek
+    #region get
+
+    new ISequencedDictionary<TKey, TValue> Reversed();
+
+    new ISequencedCollection<TKey> Keys { get; }
+    new ISequencedCollection<TValue> Values { get; }
 
     public TKey FirstKey { get; }
 
     public TKey LastKey { get; }
+
+    public bool PeekFirstKey(out TKey key);
+
+    public bool PeekLastKey(out TKey key);
 
     /// <summary>
     /// 获取key关联的值，如果关联的值不存在，则返回预设的默认值。
@@ -132,12 +134,23 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 
     #region 接口适配
 
+    IGenericCollection<TKey> IGenericDictionary<TKey, TValue>.Keys => Keys;
+    IGenericCollection<TValue> IGenericDictionary<TKey, TValue>.Values => Values;
+    ICollection<TKey> IDictionary<TKey, TValue>.Keys => Keys;
+    ICollection<TValue> IDictionary<TKey, TValue>.Values => Values;
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
+
     void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddFirst(KeyValuePair<TKey, TValue> item) {
         AddFirst(item.Key, item.Value);
     }
 
     void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddLast(KeyValuePair<TKey, TValue> item) {
         AddLast(item.Key, item.Value);
+    }
+
+    ISequencedCollection<KeyValuePair<TKey, TValue>> ISequencedCollection<KeyValuePair<TKey, TValue>>.Reversed() {
+        return Reversed();
     }
 
     #endregion

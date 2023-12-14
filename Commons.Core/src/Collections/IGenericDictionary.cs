@@ -16,24 +16,20 @@
 
 #endregion
 
-using System.Collections;
 using System.Runtime.CompilerServices;
 
 namespace Wjybxx.Commons.Collections;
 
-/// <summary>
-/// C#在提供了泛型实现后，集合和字典的接口简直一团乱麻
-/// </summary>
-/// <typeparam name="TKey"></typeparam>
-/// <typeparam name="TValue"></typeparam>
-public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary, IGenericCollection<KeyValuePair<TKey, TValue>>
+public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>,
+    IGenericCollection<KeyValuePair<TKey, TValue>>
 {
     new TValue this[TKey key] { get; set; }
     new IGenericCollection<TKey> Keys { get; }
     new IGenericCollection<TValue> Values { get; }
-    new bool IsReadOnly { get; }
 
-    new void Clear();
+    new bool TryGetValue(TKey key, out TValue value);
+
+    new bool ContainsKey(TKey key);
 
     /// <summary>
     /// 是否包含给定的Value
@@ -86,84 +82,24 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     }
 
 
-    #region 泛型接口适配
+    #region 接口适配
 
     // 泛型接口建议实现类再显式实现，因为转换为接口的情况较多，可减少转发
     ICollection<TKey> IDictionary<TKey, TValue>.Keys => Keys;
     ICollection<TValue> IDictionary<TKey, TValue>.Values => Values;
-    bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => IsReadOnly;
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
     bool IDictionary<TKey, TValue>.ContainsKey(TKey key) => ContainsKey(key);
+
+    bool IReadOnlyDictionary<TKey, TValue>.ContainsKey(TKey key) => ContainsKey(key);
 
     TValue IDictionary<TKey, TValue>.this[TKey key] {
         get => this[key];
         set => this[key] = value;
     }
-
-    void ICollection<KeyValuePair<TKey, TValue>>.Clear() {
-        Clear();
-    }
-
-    #endregion
-
-    #region 非泛型接口适配
-
-    // 非泛型接口不建议子类再显式实现
-
-    ICollection IDictionary.Keys => Keys;
-    ICollection IDictionary.Values => Values;
-
-    void IDictionary.Clear() {
-        Clear();
-    }
-
-    bool IDictionary.IsReadOnly => IsReadOnly;
-
-    [Obsolete]
-    bool IDictionary.Contains(object key) {
-        return key is TKey key2 && Contains(key2);
-    }
-
-
-    [Obsolete]
-    void IDictionary.Add(object key, object? value) {
-        if (key is TKey key2 && value is TValue value2) {
-            Add(key2, value2);
-        }
-        else {
-            throw new ArgumentException("Incompatible key or value");
-        }
-    }
-
-    [Obsolete]
-    void IDictionary.Remove(object key) {
-        if (key is TKey key2) {
-            Remove(key2);
-        }
-    }
-
-    [Obsolete]
-    object? IDictionary.this[object key] {
-        get {
-            if (key is TKey key2) {
-                return this[key2];
-            }
-            return null;
-        }
-        set {
-            if (key is TKey key2 && value is TValue value2) {
-                this[key2] = value2;
-            }
-            else {
-                throw new ArgumentException("Incompatible key or value");
-            }
-        }
-    }
-
-    [Obsolete]
-    IDictionaryEnumerator IDictionary.GetEnumerator() {
-        IDictionary<TKey, TValue> castDic = this;
-        return new DictionaryEnumeratorAdapter<TKey, TValue>(castDic.GetEnumerator());
+    TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] {
+        get => this[key];
     }
 
     #endregion

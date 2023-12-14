@@ -26,18 +26,30 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
 
     private ISequencedDictionary<TKey, TValue> Dictionary => (ISequencedDictionary<TKey, TValue>)_delegated;
 
-    public bool IsFixedSize => Dictionary.IsFixedSize;
+    public ISequencedCollection<TKey> Keys => Dictionary.Keys;
+    public ISequencedCollection<TValue> Values => Dictionary.Values;
 
     public TValue this[TKey key] {
         get => Dictionary[key];
         set => Dictionary[key] = value; // 等同add
     }
 
+    public override ISequencedDictionary<TKey, TValue> Reversed() {
+        return Dictionary;
+    }
 
     #region get
 
     public TKey FirstKey => Dictionary.LastKey;
     public TKey LastKey => Dictionary.FirstKey;
+
+    public bool PeekFirstKey(out TKey key) {
+        return Dictionary.PeekLastKey(out key);
+    }
+
+    public bool PeekLastKey(out TKey key) {
+        return Dictionary.PeekFirstKey(out key);
+    }
 
     public bool TryGetValue(TKey key, out TValue value) {
         return Dictionary.TryGetValue(key, out value);
@@ -67,11 +79,7 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
         return Dictionary.TryGetAndMoveToFirst(key, out value);
     }
 
-    bool IDictionary<TKey, TValue>.ContainsKey(TKey key) {
-        return Dictionary.ContainsKey(key);
-    }
-
-    bool IReadOnlyDictionary<TKey, TValue>.ContainsKey(TKey key) {
+    public bool ContainsKey(TKey key) {
         return Dictionary.ContainsKey(key);
     }
 
@@ -136,6 +144,4 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
     }
 
     #endregion
-
-
 }

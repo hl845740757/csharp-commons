@@ -23,7 +23,7 @@ public interface ISequencedCollection<T> : IGenericCollection<T>
     /// <summary>
     /// 返回一个当前集合的逆序视图
     /// 对逆序视图的AddFirst、AddLast、RemoveFirst、RemoveLast等明确方向的操作将颠倒，
-    /// 而普通的Add方法将不受影响。
+    /// 而普通的Add、Remove等方法将不受影响。
     /// </summary>
     /// <returns></returns>
     ISequencedCollection<T> Reversed();

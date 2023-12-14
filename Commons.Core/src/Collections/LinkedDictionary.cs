@@ -45,8 +45,7 @@ namespace Wjybxx.Commons.Collections;
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
 [Serializable]
-public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, ISerializable
-    where TKey : notnull
+public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, ISerializable
 {
     // C#的泛型是独立的类，因此缓存是独立的
     private static readonly bool KeyIsValueType = typeof(TKey).IsValueType;
@@ -111,16 +110,17 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public int Count => _count;
     public bool IsReadOnly => false;
-    public bool IsSynchronized => false;
-    public object SyncRoot => this;
-    public bool IsFixedSize => false;
 
     private IEqualityComparer<TValue> ValComparer => EqualityComparer<TValue>.Default;
 
+    private static InvalidOperationException DictionaryEmptyException() {
+        return new InvalidOperationException("Dictionary is Empty");
+    }
+
     #region keys/values
 
-    public IGenericCollection<TKey> Keys => CachedKeys();
-    public IGenericCollection<TValue> Values => CachedValues();
+    public ISequencedCollection<TKey> Keys => CachedKeys();
+    public ISequencedCollection<TValue> Values => CachedValues();
     ICollection<TKey> IDictionary<TKey, TValue>.Keys => CachedKeys();
     ICollection<TValue> IDictionary<TKey, TValue>.Values => CachedValues();
     IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => CachedKeys();
@@ -128,14 +128,14 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     private KeyCollection CachedKeys() {
         if (_keys == null) {
-            _keys = new KeyCollection(this);
+            _keys = new KeyCollection(this, false);
         }
         return _keys;
     }
 
     private ValueCollection CachedValues() {
         if (_values == null) {
-            _values = new ValueCollection(this);
+            _values = new ValueCollection(this, false);
         }
         return _values;
     }
@@ -190,13 +190,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    public TKey FirstKey {
-        get {
-            if (_head == null) throw DictionaryEmptyException();
-            return _head._key;
-        }
-    }
-
     public bool PeekLast(out KeyValuePair<TKey, TValue> pair) {
         if (_tail != null) {
             pair = _tail.AsPair();
@@ -213,6 +206,22 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
+    public TKey FirstKey {
+        get {
+            if (_head == null) throw DictionaryEmptyException();
+            return _head._key;
+        }
+    }
+
+    public bool PeekFirstKey(out TKey key) {
+        if (_head == null) {
+            key = default;
+            return false;
+        }
+        key = _head._key;
+        return true;
+    }
+
     public TKey LastKey {
         get {
             if (_tail == null) throw DictionaryEmptyException();
@@ -220,13 +229,18 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private static InvalidOperationException DictionaryEmptyException() {
-        return new InvalidOperationException("Dictionary is Empty");
+    public bool PeekLastKey(out TKey key) {
+        if (_tail == null) {
+            key = default;
+            return false;
+        }
+        key = _tail._key;
+        return true;
     }
 
     #endregion
 
-    #region get
+    #region contains
 
     public bool ContainsKey(TKey key) {
         return GetNode(key) != null;
@@ -256,6 +270,10 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         Node node = GetNode(item.Key);
         return node != null && ValComparer.Equals(node._value, item.Value);
     }
+
+    #endregion
+
+    #region get
 
     public bool TryGetValue(TKey key, out TValue value) {
         var node = GetNode(key);
@@ -584,28 +602,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    public void CopyTo(Array array, int arrayIndex) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-        if (array.Rank != 1) throw new ArgumentException("RankMultiDimNotSupported");
-
-        if (array is KeyValuePair<TKey, TValue>[] pairs) {
-            CopyTo(pairs, arrayIndex);
-        }
-        else if (array is DictionaryEntry[] dictEntryArray) {
-            for (Node e = _head; e != null; e = e._next) {
-                dictEntryArray[arrayIndex++] = new DictionaryEntry(e._key, e._value);
-            }
-        }
-        else {
-            object[]? objects = array as object[];
-            if (objects == null) throw new ArgumentException("InvalidArrayType");
-            for (Node e = _head; e != null; e = e._next) {
-                objects[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
-            }
-        }
-    }
-
     public void CopyKeysTo(TKey[] array, int arrayIndex, bool reversed) {
         if (array == null) throw new ArgumentNullException(nameof(array));
         if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
@@ -618,23 +614,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         else {
             for (Node e = _head; e != null; e = e._next) {
                 array[arrayIndex++] = e._key;
-            }
-        }
-    }
-
-    private void CopyKeysTo(Array array, int arrayIndex) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-        if (array.Rank != 1) throw new ArgumentException("RankMultiDimNotSupported");
-
-        if (array is TKey[] castArray) {
-            CopyKeysTo(castArray, arrayIndex, false);
-        }
-        else {
-            object[]? objects = array as object[];
-            if (objects == null) throw new ArgumentException("InvalidArrayType");
-            for (Node e = _head; e != null; e = e._next) {
-                objects[arrayIndex++] = e._key;
             }
         }
     }
@@ -655,21 +634,20 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private void CopyValuesTo(Array array, int arrayIndex) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-        if (array.Rank != 1) throw new ArgumentException("RankMultiDimNotSupported");
+    #endregion
 
-        if (array is TValue[] castArray) {
-            CopyValuesTo(castArray, arrayIndex);
-        }
-        else {
-            object[]? objects = array as object[];
-            if (objects == null) throw new ArgumentException("InvalidArrayType");
-            for (Node e = _head; e != null; e = e._next) {
-                objects[arrayIndex++] = e._value;
-            }
-        }
+    #region itr
+
+    public ISequencedDictionary<TKey, TValue> Reversed() {
+        return new ReversedDictionaryView<TKey, TValue>(this);
+    }
+
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
+        return new PairIterator(this, false);
+    }
+
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetReversedEnumerator() {
+        return new PairIterator(this, true);
     }
 
     #endregion
@@ -970,106 +948,168 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #endregion
 
-    #region keys/values
+    #region view
 
-    private class KeyCollection : IGenericCollection<TKey>
+    private abstract class AbstractViewCollection<T> : ISequencedCollection<T>
     {
-        private readonly LinkedDictionary<TKey, TValue> _dictionary;
+        protected readonly LinkedDictionary<TKey, TValue> _dictionary;
+        protected readonly bool _reversed;
 
-        public KeyCollection(LinkedDictionary<TKey, TValue> dictionary) {
+        protected AbstractViewCollection(LinkedDictionary<TKey, TValue> dictionary, bool reversed) {
             _dictionary = dictionary;
+            _reversed = reversed;
         }
 
-        public int Count => _dictionary.Count;
         public bool IsReadOnly => true;
-        public bool IsSynchronized => false;
-        public object SyncRoot => _dictionary.SyncRoot;
+        public int Count => _dictionary.Count;
 
-        public bool Contains(TKey item) {
-            return item != null && _dictionary.ContainsKey(item);
+        #region modify
+
+        public void Add(T item) {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
         }
 
-        public void CopyTo(TKey[] array, int arrayIndex) {
-            _dictionary.CopyKeysTo(array, arrayIndex, false);
+        public void AddFirst(T item) {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
         }
 
-        public void CopyTo(Array array, int index) {
-            _dictionary.CopyKeysTo(array, index);
+        public void AddLast(T item) {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
         }
 
-        public IEnumerator<TKey> GetEnumerator() {
-            return new KeyIterator(_dictionary, false);
+        public T RemoveFirst() {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
         }
 
-        public void Add(TKey item) {
-            throw new InvalidOperationException("NotSupported_KeyCollectionSet");
+        public bool TryRemoveFirst(out T item) {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
+        }
+
+        public T RemoveLast() {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
+        }
+
+        public bool TryRemoveLast(out T item) {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
+        }
+
+        public bool Remove(T item) {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
         }
 
         public void Clear() {
-            throw new InvalidOperationException("NotSupported_KeyCollectionSet");
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
         }
 
-        public bool Remove(TKey item) {
-            throw new InvalidOperationException("NotSupported_KeyCollectionSet");
+        #endregion
+
+        public abstract bool Contains(T item);
+
+        public abstract bool PeekFirst(out T item);
+
+        public abstract T First { get; }
+
+        public abstract bool PeekLast(out T item);
+
+        public abstract T Last { get; }
+
+        public abstract ISequencedCollection<T> Reversed();
+
+        public abstract IEnumerator<T> GetEnumerator();
+
+        public abstract IEnumerator<T> GetReversedEnumerator();
+
+        public abstract void CopyTo(T[] array, int arrayIndex, bool reversed = false);
+    }
+
+    private class KeyCollection : AbstractViewCollection<TKey>, ISequencedCollection<TKey>
+    {
+        public KeyCollection(LinkedDictionary<TKey, TValue> dictionary, bool reversed)
+            : base(dictionary, reversed) {
+        }
+
+        public override TKey First => _reversed ? _dictionary.LastKey : _dictionary.FirstKey;
+        public override TKey Last => _reversed ? _dictionary.FirstKey : _dictionary.LastKey;
+
+        public override bool PeekFirst(out TKey item) {
+            return _reversed ? _dictionary.PeekLastKey(out item) : _dictionary.PeekFirstKey(out item);
+        }
+
+        public override bool PeekLast(out TKey item) {
+            return _reversed ? _dictionary.PeekFirstKey(out item) : _dictionary.PeekLastKey(out item);
+        }
+
+        public override bool Contains(TKey item) {
+            return _dictionary.ContainsKey(item);
+        }
+
+        public override void CopyTo(TKey[] array, int arrayIndex, bool reversed = false) {
+            _dictionary.CopyKeysTo(array, arrayIndex, _reversed && reversed);
+        }
+
+        public override ISequencedCollection<TKey> Reversed() {
+            return _reversed ? _dictionary.Keys : new KeyCollection(_dictionary, !_reversed);
+        }
+
+        public override IEnumerator<TKey> GetEnumerator() {
+            return new KeyIterator(_dictionary, _reversed);
+        }
+
+        public override IEnumerator<TKey> GetReversedEnumerator() {
+            return new KeyIterator(_dictionary, !_reversed);
         }
     }
 
-    private class ValueCollection : IGenericCollection<TValue>
+    private class ValueCollection : AbstractViewCollection<TValue>
     {
-        private readonly LinkedDictionary<TKey, TValue> _dictionary;
-
-        public ValueCollection(LinkedDictionary<TKey, TValue> dictionary) {
-            _dictionary = dictionary;
+        public ValueCollection(LinkedDictionary<TKey, TValue> dictionary, bool reversed)
+            : base(dictionary, reversed) {
         }
 
-        public int Count => _dictionary.Count;
-        public bool IsReadOnly => true;
-        public bool IsSynchronized => false;
-        public object SyncRoot => _dictionary.SyncRoot;
+        private static TValue CheckNodeValue(Node? node) {
+            if (node == null) throw DictionaryEmptyException();
+            return node._value;
+        }
 
-        public bool Contains(TValue item) {
+        private static bool PeekNodeValue(Node? node, out TValue value) {
+            if (node == null) {
+                value = default;
+                return false;
+            }
+            value = node._value;
+            return true;
+        }
+
+        public override TValue First => _reversed ? CheckNodeValue(_dictionary._tail) : CheckNodeValue(_dictionary._head);
+        public override TValue Last => _reversed ? CheckNodeValue(_dictionary._head) : CheckNodeValue(_dictionary._tail);
+
+        public override bool PeekFirst(out TValue item) {
+            return _reversed ? PeekNodeValue(_dictionary._tail, out item) : PeekNodeValue(_dictionary._head, out item);
+        }
+
+        public override bool PeekLast(out TValue item) {
+            return _reversed ? PeekNodeValue(_dictionary._head, out item) : PeekNodeValue(_dictionary._tail, out item);
+        }
+
+        public override bool Contains(TValue item) {
             return _dictionary.ContainsValue(item);
         }
 
-        public void CopyTo(TValue[] array, int arrayIndex) {
-            _dictionary.CopyValuesTo(array, arrayIndex, false);
+        public override void CopyTo(TValue[] array, int arrayIndex, bool reversed = false) {
+            _dictionary.CopyValuesTo(array, arrayIndex, _reversed && reversed);
         }
 
-        public void CopyTo(Array array, int index) {
-            _dictionary.CopyValuesTo(array, index);
+        public override ISequencedCollection<TValue> Reversed() {
+            return _reversed ? _dictionary.Values : new ValueCollection(_dictionary, !_reversed);
         }
 
-        public IEnumerator<TValue> GetEnumerator() {
-            return new ValueIterator(_dictionary, false);
+        public override IEnumerator<TValue> GetEnumerator() {
+            return new ValueIterator(_dictionary, _reversed);
         }
 
-        public void Add(TValue item) {
-            throw new InvalidOperationException("NotSupported_ValueCollectionSet");
+        public override IEnumerator<TValue> GetReversedEnumerator() {
+            return new ValueIterator(_dictionary, !_reversed);
         }
-
-        public void Clear() {
-            throw new InvalidOperationException("NotSupported_ValueCollectionSet");
-        }
-
-        public bool Remove(TValue item) {
-            throw new InvalidOperationException("NotSupported_ValueCollectionSet");
-        }
-    }
-
-    #endregion
-
-    #region itr
-
-    public ISequencedCollection<KeyValuePair<TKey, TValue>> Reversed() {
-        return new ReversedDictionaryView<TKey, TValue>(this);
-    }
-
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
-        return new PairIterator(this, false);
-    }
-
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetReversedEnumerator() {
-        return new PairIterator(this, true);
     }
 
     private static readonly Node UnsetNode = new Node(0, default, default, -1);
@@ -1162,10 +1202,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return node._value;
         }
     }
-
-    #endregion
-
-    #region Node
 
     private class Node : IEquatable<Node>
     {
