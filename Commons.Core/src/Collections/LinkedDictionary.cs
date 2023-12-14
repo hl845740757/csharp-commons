@@ -45,7 +45,8 @@ namespace Wjybxx.Commons.Collections;
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
 [Serializable]
-public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, ISerializable where TKey : notnull
+public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, ISerializable
+    where TKey : notnull
 {
     // C#的泛型是独立的类，因此缓存是独立的
     private static readonly bool KeyIsValueType = typeof(TKey).IsValueType;
@@ -114,6 +115,10 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public object SyncRoot => this;
     public bool IsFixedSize => false;
 
+    private IEqualityComparer<TValue> ValComparer => EqualityComparer<TValue>.Default;
+
+    #region keys/values
+
     public IGenericCollection<TKey> Keys => CachedKeys();
     public IGenericCollection<TValue> Values => CachedValues();
     ICollection<TKey> IDictionary<TKey, TValue>.Keys => CachedKeys();
@@ -135,22 +140,41 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return _values;
     }
 
+    #endregion
+
+    #region this[]
+
     public TValue this[TKey key] {
         get {
             Node? node = GetNode(key);
-            if (node == null) {
-                throw new KeyNotFoundException(key.ToString());
-            }
+            if (node == null) throw new KeyNotFoundException(key.ToString());
             return node._value;
         }
         set => TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.OverwriteExisting);
     }
 
-    private IEqualityComparer<TValue> ValComparer => EqualityComparer<TValue>.Default;
+    TValue IDictionary<TKey, TValue>.this[TKey key] {
+        get {
+            Node? node = GetNode(key);
+            if (node == null) throw new KeyNotFoundException(key.ToString());
+            return node._value;
+        }
+        set => TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.OverwriteExisting);
+    }
+
+    TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] {
+        get {
+            Node? node = GetNode(key);
+            if (node == null) throw new KeyNotFoundException(key.ToString());
+            return node._value;
+        }
+    }
+
+    #endregion
 
     #region peek
 
-    public bool PeekFirstPair(out KeyValuePair<TKey, TValue> pair) {
+    public bool PeekFirst(out KeyValuePair<TKey, TValue> pair) {
         if (_head != null) {
             pair = _head.AsPair();
             return true;
@@ -159,7 +183,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return false;
     }
 
-    public KeyValuePair<TKey, TValue> FirstPair {
+    public KeyValuePair<TKey, TValue> First {
         get {
             if (_head == null) throw DictionaryEmptyException();
             return _head.AsPair();
@@ -173,7 +197,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    public bool PeekLastPair(out KeyValuePair<TKey, TValue> pair) {
+    public bool PeekLast(out KeyValuePair<TKey, TValue> pair) {
         if (_tail != null) {
             pair = _tail.AsPair();
             return true;
@@ -182,7 +206,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return false;
     }
 
-    public KeyValuePair<TKey, TValue> LastPair {
+    public KeyValuePair<TKey, TValue> Last {
         get {
             if (_tail == null) throw DictionaryEmptyException();
             return _tail.AsPair();
@@ -302,23 +326,21 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         Debug.Assert(modified);
     }
 
-    /// <summary>
-    /// 如果key已经存在，则抛出异常
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <exception cref="ArgumentException">如果key已经存在</exception>
+    public void AddFirst(KeyValuePair<TKey, TValue> item) {
+        bool modified = TryInsert(item.Key, item.Value, InsertionOrder.Head, InsertionBehavior.ThrowOnExisting);
+        Debug.Assert(modified);
+    }
+
+    public void AddLast(KeyValuePair<TKey, TValue> item) {
+        bool modified = TryInsert(item.Key, item.Value, InsertionOrder.Tail, InsertionBehavior.ThrowOnExisting);
+        Debug.Assert(modified);
+    }
+
     public void Add(TKey key, TValue value) {
         bool modified = TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.ThrowOnExisting);
         Debug.Assert(modified);
     }
 
-    /// <summary>
-    /// 如果key不存在则添加成功并返回true，否则返回false
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns>是否添加成功</returns>
     public bool TryAdd(TKey key, TValue value) {
         return TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.None);
     }
@@ -1037,6 +1059,10 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     #endregion
 
     #region itr
+
+    public ISequencedCollection<KeyValuePair<TKey, TValue>> Reversed() {
+        return new ReversedDictionaryView<TKey, TValue>(this);
+    }
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
         return new PairIterator(this, false);

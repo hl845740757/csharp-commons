@@ -25,18 +25,12 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
-public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, TValue> where TKey : notnull
+public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, TValue>, ISequencedCollection<KeyValuePair<TKey, TValue>>
 {
     #region peek
 
-    public bool PeekFirstPair(out KeyValuePair<TKey, TValue> pair);
-
-    public KeyValuePair<TKey, TValue> FirstPair { get; }
     public TKey FirstKey { get; }
 
-    public bool PeekLastPair(out KeyValuePair<TKey, TValue> pair);
-
-    public KeyValuePair<TKey, TValue> LastPair { get; }
     public TKey LastKey { get; }
 
     /// <summary>
@@ -136,57 +130,15 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 
     #endregion
 
-    #region remove
+    #region 接口适配
 
-    /// <summary>
-    /// 字典的原生接口Remove只有返回值，其实是不好的，更多的情况下我们需要返回值；但C#存在值结构，当value是值类型的时候总是返回值会导致不必要的内存分配。
-    /// <see cref="Dictionary{TKey,TValue}"/>中提供了该补偿方法，但未在接口中添加。
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value">接收返回值</param>
-    /// <returns>是否删除成功</returns>
-    public bool Remove(TKey key, out TValue value);
+    void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddFirst(KeyValuePair<TKey, TValue> item) {
+        AddFirst(item.Key, item.Value);
+    }
 
-    /// <summary>
-    /// 删除有序字典的首个键值对
-    /// </summary>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException">如果字典为空</exception>
-    public KeyValuePair<TKey, TValue> RemoveFirst();
-
-    /// <summary>
-    /// 尝试删除有序字典的首个键值对。
-    /// 如果字典不为空，则删除首个键值对并返回true，否则返回false
-    /// </summary>
-    /// <param name="pair"></param>
-    /// <returns>是否删除成功</returns>
-    public bool TryRemoveFirst(out KeyValuePair<TKey, TValue> pair);
-
-    /// <summary>
-    /// 删除有序字典的末尾键值对
-    /// </summary>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException">如果字典为空</exception>
-    public KeyValuePair<TKey, TValue> RemoveLast();
-
-    /// <summary>
-    /// 尝试删除有序字典的末尾键值对。
-    /// 如果字典不为空，则删除末尾键值对并返回true，否则返回false。
-    /// </summary>
-    /// <param name="pair"></param>
-    /// <returns>是否删除成功</returns>
-    public bool TryRemoveLast(out KeyValuePair<TKey, TValue> pair);
-
-    #endregion
-
-    #region itr
-
-    /// <summary>
-    /// 获取反向迭代器
-    /// (标准点的话应该创建Reversed视图，但复杂度较高，暂不想实现；即使以后添加，该接口也可以作为常用的快捷方法。)
-    /// </summary>
-    /// <returns></returns>
-    IEnumerator<KeyValuePair<TKey, TValue>> GetReversedEnumerator();
+    void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddLast(KeyValuePair<TKey, TValue> item) {
+        AddLast(item.Key, item.Value);
+    }
 
     #endregion
 }

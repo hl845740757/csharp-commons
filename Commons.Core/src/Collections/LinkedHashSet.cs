@@ -29,7 +29,7 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 [Serializable]
-public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
+public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey>, ISerializable
 {
     /** 总是延迟分配空间，以减少创建空实例的开销 */
     private Node?[]? _table;
@@ -640,105 +640,11 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     #endregion
 
-    #region reversed
+    #region itr
 
     public ISequencedSet<TKey> Reversed() {
-        return new ReversedSetView(this);
+        return new ReversedSequenceSetView<TKey>(this);
     }
-
-    private class ReversedSetView : ISequencedSet<TKey>
-    {
-        private readonly LinkedHashSet<TKey> _hashSet;
-
-        public ReversedSetView(LinkedHashSet<TKey> hashSet) {
-            _hashSet = hashSet;
-        }
-
-        public int Count => _hashSet.Count();
-        public bool IsReadOnly => true;
-        public bool IsSynchronized => false;
-        public object SyncRoot => _hashSet.SyncRoot;
-
-        public bool PeekFirst(out TKey item) {
-            return _hashSet.PeekLast(out item);
-        }
-
-        public TKey First => _hashSet.Last;
-
-        public bool PeekLast(out TKey item) {
-            return _hashSet.PeekFirst(out item);
-        }
-
-        public TKey Last => _hashSet.First;
-
-        public bool Contains(TKey item) {
-            return _hashSet.Contains(item);
-        }
-
-        public bool Remove(TKey item) {
-            return _hashSet.Remove(item);
-        }
-
-        void ICollection<TKey>.Add(TKey item) {
-            _hashSet.Add(item); // 不颠倒顺序
-        }
-
-        bool IGenericSet<TKey>.Add(TKey item) {
-            return _hashSet.Add(item); // 不颠倒顺序
-        }
-
-        public void AddFirst(TKey item) {
-            _hashSet.AddLast(item);
-        }
-
-        public void AddLast(TKey item) {
-            _hashSet.AddFirst(item);
-        }
-
-        public TKey RemoveFirst() {
-            return _hashSet.RemoveLast();
-        }
-
-        public bool TryRemoveFirst(out TKey item) {
-            return _hashSet.TryRemoveLast(out item);
-        }
-
-        public TKey RemoveLast() {
-            return _hashSet.RemoveFirst();
-        }
-
-        public bool TryRemoveLast(out TKey item) {
-            return _hashSet.TryRemoveFirst(out item);
-        }
-
-        public void CopyTo(TKey[] array, int arrayIndex) {
-            _hashSet.CopyTo(array, arrayIndex, true);
-        }
-
-        public void CopyTo(Array array, int index) {
-            _hashSet.CopyTo(array, index, true);
-        }
-
-        public void Clear() {
-            _hashSet.Clear();
-        }
-
-        public IEnumerator<TKey> GetEnumerator() {
-            return _hashSet.GetReversedEnumerator();
-        }
-
-        public IEnumerator<TKey> GetReversedEnumerator() {
-            return _hashSet.GetEnumerator();
-        }
-
-        public ISequencedSet<TKey> Reversed() {
-            return _hashSet;
-        }
-    }
-
-    #endregion
-
-    #region itr
 
     public IEnumerator<TKey> GetEnumerator() {
         return new SetIterator(this, false);

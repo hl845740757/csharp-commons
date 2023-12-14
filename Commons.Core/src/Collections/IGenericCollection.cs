@@ -21,8 +21,10 @@ using System.Runtime.CompilerServices;
 
 namespace Wjybxx.Commons.Collections;
 
-public interface IGenericCollection<T> : ICollection<T>, ICollection, IReadOnlyCollection<T>
+public interface IGenericCollection<T> : ICollection<T>, ICollection
 {
+    public new int Count { get; }
+
     /// <summary>
     /// 批量添加元素
     /// 1.该接口层面不要求原子性，子类实现可以有更强的约束。
@@ -42,18 +44,8 @@ public interface IGenericCollection<T> : ICollection<T>, ICollection, IReadOnlyC
         return GetEnumerator();
     }
 
-    int ICollection.Count {
-        get {
-            ICollection<T> castObj = this;
-            return castObj.Count;
-        }
-    }
-    int IReadOnlyCollection<T>.Count {
-        get {
-            ICollection<T> castObj = this;
-            return castObj.Count;
-        }
-    }
+    int ICollection.Count => Count;
+    int ICollection<T>.Count => Count;
 
     #endregion
 

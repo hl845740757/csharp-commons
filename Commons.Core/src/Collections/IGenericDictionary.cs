@@ -26,12 +26,14 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
-public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary,
-    IReadOnlyDictionary<TKey, TValue>, IGenericCollection<KeyValuePair<TKey, TValue>>
+public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDictionary, IGenericCollection<KeyValuePair<TKey, TValue>>
 {
     new TValue this[TKey key] { get; set; }
     new IGenericCollection<TKey> Keys { get; }
     new IGenericCollection<TValue> Values { get; }
+    new bool IsReadOnly { get; }
+
+    new void Clear();
 
     /// <summary>
     /// 是否包含给定的Value
@@ -63,6 +65,15 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection);
 
     /// <summary>
+    /// 字典的原生接口Remove只返回bool值，而更多的情况下我们需要返回值；但C#存在值结构，当value是值类型的时候总是返回值会导致不必要的内存分配。
+    /// <see cref="Dictionary{TKey,TValue}"/>中提供了该补偿方法，但未在接口中添加。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value">接收返回值</param>
+    /// <returns>是否删除成功</returns>
+    public bool Remove(TKey key, out TValue value);
+
+    /// <summary>
     /// 调整空间
     /// 1.该接口以允许用户触发扩容
     /// 2.Hash结构通常有较大的辅助空间，提供接口以允许收缩；
@@ -74,37 +85,47 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     void AdjustCapacity(int expectedCount, bool ignoreInitCount = false) {
     }
 
-    #region 接口适配
 
-    // 不建议子类再实现这些接口
+    #region 泛型接口适配
 
+    // 泛型接口建议实现类再显式实现，因为转换为接口的情况较多，可减少转发
     ICollection<TKey> IDictionary<TKey, TValue>.Keys => Keys;
     ICollection<TValue> IDictionary<TKey, TValue>.Values => Values;
+    bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => IsReadOnly;
 
-    ICollection IDictionary.Keys {
-        get {
-            IGenericDictionary<TKey, TValue> castDic = this;
-            return castDic.Keys;
-        }
-    }
-    ICollection IDictionary.Values {
-        get {
-            IGenericDictionary<TKey, TValue> castDic = this;
-            return castDic.Values;
-        }
+    bool IDictionary<TKey, TValue>.ContainsKey(TKey key) => ContainsKey(key);
+
+    TValue IDictionary<TKey, TValue>.this[TKey key] {
+        get => this[key];
+        set => this[key] = value;
     }
 
-    IEnumerator IEnumerable.GetEnumerator() {
-        IDictionary<TKey, TValue> castDic = this;
-        return castDic.GetEnumerator();
+    void ICollection<KeyValuePair<TKey, TValue>>.Clear() {
+        Clear();
     }
 
-    /** 默认实现将不支持修改key和value */
-    IDictionaryEnumerator IDictionary.GetEnumerator() {
-        IDictionary<TKey, TValue> castDic = this;
-        return new DictionaryEnumeratorAdapter<TKey, TValue>(castDic.GetEnumerator());
+    #endregion
+
+    #region 非泛型接口适配
+
+    // 非泛型接口不建议子类再显式实现
+
+    ICollection IDictionary.Keys => Keys;
+    ICollection IDictionary.Values => Values;
+
+    void IDictionary.Clear() {
+        Clear();
     }
 
+    bool IDictionary.IsReadOnly => IsReadOnly;
+
+    [Obsolete]
+    bool IDictionary.Contains(object key) {
+        return key is TKey key2 && Contains(key2);
+    }
+
+
+    [Obsolete]
     void IDictionary.Add(object key, object? value) {
         if (key is TKey key2 && value is TValue value2) {
             Add(key2, value2);
@@ -114,22 +135,14 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
         }
     }
 
-    bool IDictionary.Contains(object key) {
-        return key is TKey key2 && Contains(key2);
-    }
-
+    [Obsolete]
     void IDictionary.Remove(object key) {
         if (key is TKey key2) {
             Remove(key2);
         }
     }
 
-    TValue IDictionary<TKey, TValue>.this[TKey key] {
-        get => this[key];
-        set => this[key] = value;
-    }
-    TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] => this[key];
-
+    [Obsolete]
     object? IDictionary.this[object key] {
         get {
             if (key is TKey key2) {
@@ -145,6 +158,12 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
                 throw new ArgumentException("Incompatible key or value");
             }
         }
+    }
+
+    [Obsolete]
+    IDictionaryEnumerator IDictionary.GetEnumerator() {
+        IDictionary<TKey, TValue> castDic = this;
+        return new DictionaryEnumeratorAdapter<TKey, TValue>(castDic.GetEnumerator());
     }
 
     #endregion

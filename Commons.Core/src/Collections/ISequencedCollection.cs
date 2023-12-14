@@ -29,13 +29,6 @@ public interface ISequencedCollection<T> : IGenericCollection<T>
     ISequencedCollection<T> Reversed();
 
     /// <summary>
-    /// 获取逆序迭代器
-    /// (也可通过Reversed视图拿到，这是个快捷方法)
-    /// </summary>
-    /// <returns></returns>
-    IEnumerator<T> GetReversedEnumerator();
-
-    /// <summary>
     /// 查看集合的首个元素
     /// </summary>
     /// <param name="item"></param>
@@ -100,4 +93,27 @@ public interface ISequencedCollection<T> : IGenericCollection<T>
     /// <param name="item"></param>
     /// <returns></returns>
     bool TryRemoveLast(out T item);
+
+    #region itr
+
+    /// <summary>
+    /// 获取逆序迭代器
+    /// (也可通过Reversed视图拿到，这是个快捷方法)
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator<T> GetReversedEnumerator();
+
+    /// <summary>
+    /// 拷贝数据到指定数组
+    /// </summary>
+    /// <param name="array">目标数组</param>
+    /// <param name="arrayIndex">目标数组偏移</param>
+    /// <param name="reversed">是否逆序</param>
+    void CopyTo(T[] array, int arrayIndex, bool reversed = false);
+
+    void ICollection<T>.CopyTo(T[] array, int arrayIndex) {
+        CopyTo(array, arrayIndex, false);
+    }
+
+    #endregion
 }
