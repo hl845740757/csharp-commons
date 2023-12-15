@@ -19,7 +19,8 @@
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 没有实现<see cref="ISet{T}"/>是故意的，ISet有点复杂，暂时不想实现，用户可以通过自定义Util方法解决
+/// 没有实现<see cref="ISet{T}"/>是故意的，ISet中的接口过于术语化，日常的使用不需要那么多接口，多数情况下我们只想判断是否包含某个元素。
+/// 那些特殊的接口，用户可以通过自定义Util方法解决。
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public interface IGenericSet<T> : IGenericCollection<T>

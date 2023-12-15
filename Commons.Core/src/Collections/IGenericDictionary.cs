@@ -98,6 +98,7 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
         get => this[key];
         set => this[key] = value;
     }
+
     TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] {
         get => this[key];
     }

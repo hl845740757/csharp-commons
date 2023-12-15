@@ -38,8 +38,8 @@ public static class HashCommon
 
     /** 对原始的hash进行混淆，降低冲突概率 */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Mix(int x) {
-        uint h = (uint)x * IntPhi;
+    public static int Mix(int hash) {
+        uint h = (uint)hash * IntPhi;
         return (int)(h ^ (h >> 16));
     }
 

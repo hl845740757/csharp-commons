@@ -37,8 +37,7 @@ public class DictionaryEnumeratorAdapter<TKey, TValue> : IDictionaryEnumerator
     }
 
     public object Current => _enumerator.Current;
-    [Obsolete("不支持修改元素")]
-    public DictionaryEntry Entry => new(_enumerator.Current.Key, _enumerator.Current.Value);
+    [Obsolete("不支持修改元素")] public DictionaryEntry Entry => new(_enumerator.Current.Key, _enumerator.Current.Value);
     public object Key => _enumerator.Current.Key;
     public object? Value => _enumerator.Current.Value;
 }

@@ -29,7 +29,8 @@ namespace Wjybxx.Commons.Collections;
 /// 保持插入序的字典
 /// 1.使用简单的线性探测法解决Hash冲突，因此在数据量较大的情况下查询性能可能会降低 -- 实际表现很好。
 /// 2.算法参考自FastUtil的LinkedOpenHashMap。
-/// 3.非线程安全。
+/// 3.支持null作为key。
+/// 4.非线程安全。
 ///
 /// 测试数据(在GetNode方法中记录线性探测次数)：
 /// 1. 1W个int类型key，hash冲突后线性探测的平均值小于1 (总次数4000~5000)
@@ -48,10 +49,9 @@ namespace Wjybxx.Commons.Collections;
 public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, ISerializable
 {
     // C#的泛型是独立的类，因此缓存是独立的
-    private static readonly bool KeyIsValueType = typeof(TKey).IsValueType;
     private static readonly bool ValueIsValueType = typeof(TValue).IsValueType;
 
-    /** 总是延迟分配空间，以减少创建空实例的开销 */
+    /** len = 2^n + 1，额外的槽用于存储nullKey；总是延迟分配空间，以减少创建空实例的开销 */
     private Node?[]? _table; // 这个NullableReference有时真的很烦
     private Node? _head;
     private Node? _tail;
@@ -111,12 +111,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public int Count => _count;
     public bool IsReadOnly => false;
 
-    private IEqualityComparer<TValue> ValComparer => EqualityComparer<TValue>.Default;
-
-    private static InvalidOperationException DictionaryEmptyException() {
-        return new InvalidOperationException("Dictionary is Empty");
-    }
-
     #region keys/values
 
     public ISequencedCollection<TKey> Keys => CachedKeys();
@@ -140,34 +134,13 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return _values;
     }
 
-    #endregion
-
-    #region this[]
-
     public TValue this[TKey key] {
         get {
             Node? node = GetNode(key);
-            if (node == null) throw new KeyNotFoundException(key.ToString());
+            if (node == null) throw KeyNotFoundException(key);
             return node._value;
         }
         set => TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.OverwriteExisting);
-    }
-
-    TValue IDictionary<TKey, TValue>.this[TKey key] {
-        get {
-            Node? node = GetNode(key);
-            if (node == null) throw new KeyNotFoundException(key.ToString());
-            return node._value;
-        }
-        set => TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.OverwriteExisting);
-    }
-
-    TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] {
-        get {
-            Node? node = GetNode(key);
-            if (node == null) throw new KeyNotFoundException(key.ToString());
-            return node._value;
-        }
     }
 
     #endregion
@@ -298,7 +271,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public TValue GetAndMoveToFirst(TKey key) {
         var node = GetNode(key);
         if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
+            throw KeyNotFoundException(key);
         }
         MoveToFirst(node);
         return node._value;
@@ -318,7 +291,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public TValue GetAndMoveToLast(TKey key) {
         var node = GetNode(key);
         if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
+            throw KeyNotFoundException(key);
         }
         MoveToLast(node);
         return node._value;
@@ -497,11 +470,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public void Clear() {
         int count = _count;
-        if (count > 0 && _table != null) {
+        if (count > 0) {
             _count = 0;
             _version++;
             _head = _tail = null;
-            Array.Clear(_table);
+            Array.Clear(_table!);
         }
     }
 
@@ -522,7 +495,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public bool NextKey(TKey key, out TKey next) {
         var node = GetNode(key);
         if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
+            throw KeyNotFoundException(key);
         }
         if (node._next != null) {
             next = node._next._key;
@@ -542,7 +515,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public bool PrevKey(TKey key, out TKey prev) {
         var node = GetNode(key);
         if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
+            throw KeyNotFoundException(key);
         }
         if (node._prev != null) {
             prev = node._prev._key;
@@ -665,10 +638,15 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     private int Find(TKey key, int hash) {
         Node[] table = _table;
         if (table == null) {
-            table = _table = new Node[_mask + 1];
+            table = _table = new Node[_mask + 2];
         }
-        int mask = _mask;
+        if (key == null) {
+            Node nullNode = table[_mask + 1];
+            return nullNode == null ? -(_mask + 2) : (_mask + 1);
+        }
+
         IEqualityComparer<TKey> keyComparer = _keyComparer;
+        int mask = _mask;
         // 先测试无冲突位置
         int pos = mask & hash;
         Node node = table[pos];
@@ -677,7 +655,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return pos;
         }
         // 线性探测
-        // 注意：为了利用空间，线性探测需要在越界时绕回到数组首部(mask取余绕回)
+        // 注意：为了利用空间，线性探测需要在越界时绕回到数组首部(mask取余绕回)；'i'就是探测次数
         // 由于数组满时一定会触发扩容，可保证这里一定有一个槽为null；如果循环一圈失败，上次扩容失败被捕获？
         for (int i = 0; i < mask; i++) {
             pos = (pos + 1) & mask;
@@ -696,10 +674,13 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (table == null || _count == 0) {
             return null;
         }
-        int mask = _mask;
+        if (key == null) {
+            return table[_mask + 1];
+        }
         IEqualityComparer<TKey> keyComparer = _keyComparer;
-        int hash = HashCommon.Mix(keyComparer.GetHashCode(key));
+        int mask = _mask;
         // 先测试无冲突位置
+        int hash = KeyHash(key, keyComparer);
         int pos = mask & hash;
         Node node = table[pos];
         if (node == null) return null;
@@ -718,9 +699,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     private bool TryInsert(TKey key, TValue value, InsertionOrder order, InsertionBehavior behavior) {
-        if (key == null) throw new ArgumentNullException(nameof(key));
-
-        int hash = HashCommon.Mix(_keyComparer.GetHashCode(key));
+        int hash = KeyHash(key, _keyComparer);
         int pos = Find(key, hash);
         if (pos >= 0) {
             Node existNode = _table![pos]!;
@@ -743,9 +722,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     private PutResult<TValue> TryPut(TKey key, TValue value, PutBehavior behavior) {
-        if (key == null) throw new ArgumentNullException(nameof(key));
-
-        int hash = HashCommon.Mix(_keyComparer.GetHashCode(key));
+        int hash = KeyHash(key, _keyComparer);
         int pos = Find(key, hash);
         if (pos >= 0) {
             Node existNode = _table![pos]!;
@@ -802,7 +779,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     private void Rehash(int newSize) {
         Debug.Assert(newSize >= _count);
         Node[] oldTable = _table!;
-        Node[] newTable = new Node[newSize];
+        Node[] newTable = new Node[newSize + 1];
 
         int mask = newSize - 1;
         int pos;
@@ -813,9 +790,14 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             if (node == null) {
                 continue;
             }
-            pos = node._hash & mask;
-            while (newTable[pos] != null) {
-                pos = (pos + 1) & mask;
+            if (node._key == null) {
+                pos = mask + 1;
+            }
+            else {
+                pos = node._hash & mask;
+                while (newTable[pos] != null) {
+                    pos = (pos + 1) & mask;
+                }
             }
             newTable[pos] = node;
             node._index = pos;
@@ -857,6 +839,9 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     /// </summary>
     /// <param name="pos"></param>
     private void ShiftKeys(int pos) {
+        if (pos == _mask + 1) { // nullKey
+            return;
+        }
         Node[] table = _table!;
         int mask = _mask;
 
@@ -944,6 +929,24 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         node._prev = _tail;
         _tail!._next = node;
         _tail = node;
+    }
+
+    #endregion
+
+    #region util
+
+    private IEqualityComparer<TValue> ValComparer => EqualityComparer<TValue>.Default;
+
+    private static int KeyHash(TKey? key, IEqualityComparer<TKey> keyComparer) {
+        return key == null ? 0 : HashCommon.Mix(keyComparer.GetHashCode(key));
+    }
+
+    private static InvalidOperationException DictionaryEmptyException() {
+        return new InvalidOperationException("Dictionary is Empty");
+    }
+
+    private static KeyNotFoundException KeyNotFoundException(TKey key) {
+        return new KeyNotFoundException(key == null ? "null" : key.ToString());
     }
 
     #endregion
@@ -1044,11 +1047,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         public override void CopyTo(TKey[] array, int arrayIndex, bool reversed = false) {
-            _dictionary.CopyKeysTo(array, arrayIndex, _reversed && reversed);
+            _dictionary.CopyKeysTo(array, arrayIndex, _reversed ^ reversed);
         }
 
         public override ISequencedCollection<TKey> Reversed() {
-            return _reversed ? _dictionary.Keys : new KeyCollection(_dictionary, !_reversed);
+            return _reversed ? _dictionary.Keys : new KeyCollection(_dictionary, true);
         }
 
         public override IEnumerator<TKey> GetEnumerator() {
@@ -1096,11 +1099,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         public override void CopyTo(TValue[] array, int arrayIndex, bool reversed = false) {
-            _dictionary.CopyValuesTo(array, arrayIndex, _reversed && reversed);
+            _dictionary.CopyValuesTo(array, arrayIndex, _reversed ^ reversed);
         }
 
         public override ISequencedCollection<TValue> Reversed() {
-            return _reversed ? _dictionary.Values : new ValueCollection(_dictionary, !_reversed);
+            return _reversed ? _dictionary.Values : new ValueCollection(_dictionary, true);
         }
 
         public override IEnumerator<TValue> GetEnumerator() {
@@ -1113,7 +1116,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     private static readonly Node UnsetNode = new Node(0, default, default, -1);
-    private static readonly Node DisposedNode = new Node(0, default, default, -1);
+    // private static readonly Node DisposedNode = new Node(0, default, default, -1);
 
     private abstract class AbstractIterator<T> : IEnumerator<T>
     {
@@ -1203,11 +1206,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private class Node : IEquatable<Node>
+    private class Node
     {
         /** 由于Key的hash使用频率极高，缓存以减少求值开销 */
         internal readonly int _hash;
-        internal readonly TKey _key;
+        internal readonly TKey? _key;
         internal TValue? _value;
         /** 由于使用线性探测法，删除的元素不一定直接位于hash槽上，需要记录，以便快速删除；-1表示已删除 */
         internal int _index;
@@ -1215,7 +1218,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         internal Node? _prev;
         internal Node? _next;
 
-        public Node(int hash, TKey key, TValue value, int index) {
+        public Node(int hash, TKey? key, TValue value, int index) {
             _hash = hash;
             _key = key;
             _value = value;
@@ -1240,34 +1243,9 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return _hash; // 不使用value计算hash，因为value可能在中途变更
         }
 
-        #region equals
-
-        public bool Equals(Node? other) {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return EqualityComparer<TKey>.Default.Equals(_key, other._key) && EqualityComparer<TValue>.Default.Equals(_value, other._value);
-        }
-
-        public override bool Equals(object? obj) {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Node)obj);
-        }
-
-        public static bool operator ==(Node? left, Node? right) {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Node? left, Node? right) {
-            return !Equals(left, right);
-        }
-
         public override string ToString() {
             return $"{nameof(_key)}: {_key}, {nameof(_value)}: {_value}";
         }
-
-        #endregion
     }
 
     #endregion
@@ -1312,19 +1290,19 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private void BuildTable(KeyValuePair<TKey, TValue>[] keyValuePairs) {
+    private void BuildTable(KeyValuePair<TKey, TValue>[] pairsArray) {
         // 构建Node链
         IEqualityComparer<TKey> keyComparer = _keyComparer;
         Node head;
         {
-            KeyValuePair<TKey, TValue> pair = keyValuePairs[0];
-            int hash = HashCommon.Mix(keyComparer.GetHashCode(pair.Key));
+            KeyValuePair<TKey, TValue> pair = pairsArray[0];
+            int hash = KeyHash(pair.Key, keyComparer);
             head = new Node(hash, pair.Key, pair.Value, -1);
         }
         Node tail = head;
-        for (var i = 1; i < keyValuePairs.Length; i++) {
-            KeyValuePair<TKey, TValue> pair = keyValuePairs[i];
-            int hash = HashCommon.Mix(keyComparer.GetHashCode(pair.Key));
+        for (var i = 1; i < pairsArray.Length; i++) {
+            KeyValuePair<TKey, TValue> pair = pairsArray[i];
+            int hash = KeyHash(pair.Key, keyComparer);
             Node next = new Node(hash, pair.Key, pair.Value, -1);
             //
             tail._next = next;
@@ -1335,19 +1313,24 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         _tail = tail;
 
         // 散列到数组 -- 不走rehash避免创建辅助空间
-        Node[] newTable = new Node[_mask + 1];
+        Node[] newTable = new Node[_mask + 2];
         int mask = _mask;
         int pos;
         for (Node node = _head; node != null; node = node._next) {
-            pos = node._hash & mask;
-            while (newTable[pos] != null) {
-                pos = (pos + 1) & mask;
+            if (node._key == null) {
+                pos = mask + 1;
+            }
+            else {
+                pos = node._hash & mask;
+                while (newTable[pos] != null) {
+                    pos = (pos + 1) & mask;
+                }
             }
             newTable[pos] = node;
             node._index = pos;
         }
         _table = newTable;
-        _count = keyValuePairs.Length;
+        _count = pairsArray.Length;
     }
 
     #endregion

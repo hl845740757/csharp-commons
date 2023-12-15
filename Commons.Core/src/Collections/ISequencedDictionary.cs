@@ -18,11 +18,12 @@
 
 namespace Wjybxx.Commons.Collections;
 
-public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, TValue>, ISequencedCollection<KeyValuePair<TKey, TValue>>
+public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, TValue>,
+    ISequencedCollection<KeyValuePair<TKey, TValue>>
 {
-    #region get
-
     new ISequencedDictionary<TKey, TValue> Reversed();
+
+    #region get
 
     new ISequencedCollection<TKey> Keys { get; }
     new ISequencedCollection<TValue> Values { get; }
@@ -56,7 +57,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// 获取元素，并将元素移动到首部
     /// </summary>
     /// <param name="key"></param>
-    /// <returns>如果key存在，则返回关联值</returns>
+    /// <returns>如果key存在，则返回关联值；否则抛出异常</returns>
     public TValue GetAndMoveToFirst(TKey key);
 
     /// <summary>
@@ -71,7 +72,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// 获取元素，并将元素移动到尾部
     /// </summary>
     /// <param name="key"></param>
-    /// <returns>如果key存在，则返回关联值</returns>
+    /// <returns>如果key存在，则返回关联值；否则抛出异常</returns>
     public TValue GetAndMoveToLast(TKey key);
 
     /// <summary>
@@ -140,14 +141,6 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     ICollection<TValue> IDictionary<TKey, TValue>.Values => Values;
     IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
     IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
-
-    void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddFirst(KeyValuePair<TKey, TValue> item) {
-        AddFirst(item.Key, item.Value);
-    }
-
-    void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddLast(KeyValuePair<TKey, TValue> item) {
-        AddLast(item.Key, item.Value);
-    }
 
     ISequencedCollection<KeyValuePair<TKey, TValue>> ISequencedCollection<KeyValuePair<TKey, TValue>>.Reversed() {
         return Reversed();

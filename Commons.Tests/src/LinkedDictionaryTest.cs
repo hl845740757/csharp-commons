@@ -79,8 +79,9 @@ public class LinkedDictionaryTest
         while (dictionary.Count < expectedCount) {
             Random.Shared.NextBytes(buffer);
             string next = Convert.ToHexString(buffer);
-            if (dictionary.TryAdd(next, next)) {
-                keyList.Add(next);
+            string key = Random.Shared.Next(0, 10) == 0 ? null : next; // 随机使用nullKey
+            if (dictionary.TryAdd(key, next)) {
+                keyList.Add(key);
             }
         }
         Assert.AreEqual(keyList.Count, dictionary.Count);
@@ -118,5 +119,21 @@ public class LinkedDictionaryTest
             string value2 = dictionary2[pair.Key];
             Assert.AreEqual(pair.Value, value2);
         }
+    }
+
+    [Test]
+    public void NullKeyTest() {
+        LinkedDictionary<string, string> dictionary = new LinkedDictionary<string, string>(3);
+        string value = "wjybxx";
+        dictionary[null] = value;
+        dictionary["key1"] = "key1";
+        dictionary["key2"] = "key2";
+        Assert.AreEqual(value, dictionary[null]);
+
+        Assert.True(dictionary.NextKey(null, out string nextKey));
+        Assert.AreEqual("key1", nextKey);
+
+        Assert.True(dictionary.NextKey("key1", out nextKey));
+        Assert.AreEqual("key2", nextKey);
     }
 }
