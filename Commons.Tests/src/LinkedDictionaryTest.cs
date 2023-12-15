@@ -48,14 +48,14 @@ public class LinkedDictionaryTest
                 dictionary[next] = next.ToString();
             }
         }
-        Assert.AreEqual(keyList.Count, keySet.Count);
-        Assert.AreEqual(keyList.Count, dictionary.Count);
+        Assert.That(keySet.Count, Is.EqualTo(keyList.Count));
+        Assert.That(dictionary.Count, Is.EqualTo(keyList.Count));
 
         int index = 0;
         foreach (KeyValuePair<int, string> pair in dictionary) {
             int expectedKey = keyList[index++];
             int realKey = pair.Key;
-            Assert.AreEqual(expectedKey, realKey);
+            Assert.That(realKey, Is.EqualTo(expectedKey));
         }
     }
 
@@ -84,7 +84,7 @@ public class LinkedDictionaryTest
                 keyList.Add(key);
             }
         }
-        Assert.AreEqual(keyList.Count, dictionary.Count);
+        Assert.That(dictionary.Count, Is.EqualTo(keyList.Count));
 
         int index = 0;
         foreach (KeyValuePair<string, string> pair in dictionary) {
@@ -105,6 +105,7 @@ public class LinkedDictionaryTest
         dictionary.AdjustCapacity(10000);
     }
 
+#pragma warning disable SYSLIB0011
     /** 序列化测试 */
     [Test]
     public void SerialTest() {
@@ -117,9 +118,10 @@ public class LinkedDictionaryTest
         LinkedDictionary<string, string> dictionary2 = (LinkedDictionary<string, string>)formatter.Deserialize(stream);
         foreach (KeyValuePair<string, string> pair in dictionary) {
             string value2 = dictionary2[pair.Key];
-            Assert.AreEqual(pair.Value, value2);
+            Assert.That(value2, Is.EqualTo(pair.Value));
         }
     }
+#pragma warning restore SYSLIB0011
 
     [Test]
     public void NullKeyTest() {
@@ -128,12 +130,12 @@ public class LinkedDictionaryTest
         dictionary[null] = value;
         dictionary["key1"] = "key1";
         dictionary["key2"] = "key2";
-        Assert.AreEqual(value, dictionary[null]);
+        Assert.That(dictionary[null], Is.EqualTo(value));
 
         Assert.True(dictionary.NextKey(null, out string nextKey));
-        Assert.AreEqual("key1", nextKey);
+        Assert.That(nextKey, Is.EqualTo("key1"));
 
         Assert.True(dictionary.NextKey("key1", out nextKey));
-        Assert.AreEqual("key2", nextKey);
+        Assert.That(nextKey, Is.EqualTo("key2"));
     }
 }

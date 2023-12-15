@@ -24,51 +24,51 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
         : base(delegated) {
     }
 
-    private ISequencedDictionary<TKey, TValue> Dictionary => (ISequencedDictionary<TKey, TValue>)_delegated;
+    private ISequencedDictionary<TKey, TValue> Delegated => (ISequencedDictionary<TKey, TValue>)_delegated;
 
-    public ISequencedCollection<TKey> Keys => Dictionary.Keys;
-    public ISequencedCollection<TValue> Values => Dictionary.Values;
+    public ISequencedCollection<TKey> Keys => Delegated.Keys;
+    public ISequencedCollection<TValue> Values => Delegated.Values;
 
     public TValue this[TKey key] {
-        get => Dictionary[key];
-        set => Dictionary[key] = value; // 等同add
+        get => Delegated[key];
+        set => Delegated[key] = value; // 等同add
     }
 
     public override ISequencedDictionary<TKey, TValue> Reversed() {
-        return Dictionary;
+        return Delegated;
     }
 
     #region get
 
-    public TKey FirstKey => Dictionary.LastKey;
-    public TKey LastKey => Dictionary.FirstKey;
+    public TKey FirstKey => Delegated.LastKey;
+    public TKey LastKey => Delegated.FirstKey;
 
     public bool PeekFirstKey(out TKey key) {
-        return Dictionary.PeekLastKey(out key);
+        return Delegated.PeekLastKey(out key);
     }
 
     public bool PeekLastKey(out TKey key) {
-        return Dictionary.PeekFirstKey(out key);
+        return Delegated.PeekFirstKey(out key);
     }
 
     public bool TryGetValue(TKey key, out TValue value) {
-        return Dictionary.TryGetValue(key, out value);
+        return Delegated.TryGetValue(key, out value);
     }
 
     public TValue GetOrDefault(TKey key) {
-        return Dictionary.GetOrDefault(key);
+        return Delegated.GetOrDefault(key);
     }
 
     public TValue GetOrDefault(TKey key, TValue defVal) {
-        return Dictionary.GetOrDefault(key, defVal);
+        return Delegated.GetOrDefault(key, defVal);
     }
 
     public bool ContainsKey(TKey key) {
-        return Dictionary.ContainsKey(key);
+        return Delegated.ContainsKey(key);
     }
 
     public bool ContainsValue(TValue value) {
-        return Dictionary.ContainsValue(value);
+        return Delegated.ContainsValue(value);
     }
 
     #endregion
@@ -76,43 +76,39 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
     #region add
 
     public virtual void Add(TKey key, TValue value) {
-        Dictionary.Add(key, value); // add默认不修改方向，但允许重写
+        Delegated.Add(key, value); // add默认不修改方向，但允许重写
     }
 
     public virtual bool TryAdd(TKey key, TValue value) {
-        return Dictionary.TryAdd(key, value);
+        return Delegated.TryAdd(key, value);
     }
 
     public void AddFirst(TKey key, TValue value) {
-        Dictionary.AddLast(key, value);
+        Delegated.AddLast(key, value);
     }
 
     public bool TryAddFirst(TKey key, TValue value) {
-        return Dictionary.TryAddLast(key, value);
+        return Delegated.TryAddLast(key, value);
     }
 
     public void AddLast(TKey key, TValue value) {
-        Dictionary.AddFirst(key, value);
+        Delegated.AddFirst(key, value);
     }
 
     public bool TryAddLast(TKey key, TValue value) {
-        return Dictionary.TryAddFirst(key, value);
+        return Delegated.TryAddFirst(key, value);
     }
 
     public PutResult<TValue> PutFirst(TKey key, TValue value) {
-        return Dictionary.PutLast(key, value);
+        return Delegated.PutLast(key, value);
     }
 
     public PutResult<TValue> PutLast(TKey key, TValue value) {
-        return Dictionary.PutFirst(key, value);
+        return Delegated.PutFirst(key, value);
     }
 
     public virtual PutResult<TValue> Put(TKey key, TValue value) {
-        return Dictionary.Put(key, value); // put默认不修改方向，但允许重写
-    }
-
-    public virtual void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
-        Dictionary.PutRange(collection);
+        return Delegated.Put(key, value); // put默认不修改方向，但允许重写
     }
 
     #endregion
@@ -120,11 +116,11 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
     #region remove
 
     public bool Remove(TKey key) {
-        return Dictionary.Remove(key);
+        return Delegated.Remove(key);
     }
 
     public bool Remove(TKey key, out TValue value) {
-        return Dictionary.Remove(key, out value);
+        return Delegated.Remove(key, out value);
     }
 
     #endregion

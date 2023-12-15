@@ -320,29 +320,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return TryPut(key, value, PutBehavior.MoveToLast);
     }
 
-    public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
-        InsertRange(collection, InsertionBehavior.ThrowOnExisting);
-    }
-
-    public void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection) {
-        InsertRange(collection, InsertionBehavior.OverwriteExisting);
-    }
-
-    private void InsertRange(IEnumerable<KeyValuePair<TKey, TValue>> collection, InsertionBehavior behavior) {
-        if (collection == null) throw new ArgumentNullException(nameof(collection));
-        if (collection is ICollection<KeyValuePair<TKey, TValue>> c) {
-            if (_loadFactor <= 0.5f) {
-                EnsureCapacity(c.Count); // 负载小于0.5，数组的长度将大于等于count的2倍，就能放下所有元素
-            }
-            else {
-                TryCapacity(_count + c.Count);
-            }
-        }
-        foreach (KeyValuePair<TKey, TValue> pair in collection) {
-            TryInsert(pair.Key, pair.Value, InsertionOrder.Default, behavior);
-        }
-    }
-
     #endregion
 
     #region remove
@@ -988,6 +965,10 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
         #region modify
 
+        public void AdjustCapacity(int expectedCount, bool ignoreInitCount = false) {
+            throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
+        }
+
         public void Add(T item) {
             throw new InvalidOperationException("NotSupported_KeyOrValueCollectionSet");
         }
@@ -1135,16 +1116,14 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private static readonly Node UnsetNode = new Node(0, default, default, -1);
-    // private static readonly Node DisposedNode = new Node(0, default, default, -1);
-
     private abstract class AbstractIterator<T> : IEnumerator<T>
     {
         private readonly LinkedDictionary<TKey, TValue> _dictionary;
         private readonly bool _reversed;
-
         private int _version;
-        private Node? _node;
+
+        private Node? _currNode;
+        private Node? _nextNode;
         private T _current;
 
         protected AbstractIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) {
@@ -1152,7 +1131,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             _reversed = reversed;
             _version = dictionary._version;
 
-            _node = UnsetNode;
+            _nextNode = _reversed ? _dictionary._tail : _dictionary._head;
             _current = default;
         }
 
@@ -1160,31 +1139,36 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             if (_version != _dictionary._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
-            if (_node == null) {
-                return false;
-            }
-            if (ReferenceEquals(_node, UnsetNode)) {
-                _node = _reversed ? _dictionary._tail : _dictionary._head;
-            }
-            else {
-                _node = _reversed ? _node._prev : _node._next;
-            }
-            if (_node == null) {
+            if (_nextNode == null) {
                 _current = default;
                 return false;
             }
+            Node node = _currNode = _nextNode;
+            _nextNode = _reversed ? node._prev : node._next;
             // 其实这期间node的value可能变化，安全的话应该每次创建新的Pair，但c#系统库没这么干
-            _current = CurrentOfNode(_node);
+            _current = CurrentOfNode(node);
             return true;
         }
 
         protected abstract T CurrentOfNode(Node node);
 
+        public void Remove() {
+            if (_version != _dictionary._version) {
+                throw new InvalidOperationException("EnumFailedVersion");
+            }
+            if (_currNode == null) {
+                throw new InvalidOperationException("AlreadyRemoved");
+            }
+            _dictionary.RemoveNode(_currNode);
+            _currNode = null;
+            _version = _dictionary._version;
+        }
+
         public void Reset() {
             if (_version != _dictionary._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
-            _node = _reversed ? _dictionary._tail : _dictionary._head;
+            _nextNode = _reversed ? _dictionary._tail : _dictionary._head;
             _current = default;
         }
 
@@ -1196,7 +1180,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private class PairIterator : AbstractIterator<KeyValuePair<TKey, TValue>>
+    private class PairIterator : AbstractIterator<KeyValuePair<TKey, TValue>>, IRemovableIterator<KeyValuePair<TKey, TValue>>
     {
         public PairIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) : base(dictionary, reversed) {
         }

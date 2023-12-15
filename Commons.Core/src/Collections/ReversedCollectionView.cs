@@ -33,6 +33,10 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
         return _delegated;
     }
 
+    public void AdjustCapacity(int expectedCount, bool ignoreInitCount = false) {
+        _delegated.AdjustCapacity(expectedCount, ignoreInitCount);
+    }
+
     #region get
 
     public bool PeekFirst(out TKey item) {

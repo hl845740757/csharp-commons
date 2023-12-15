@@ -254,6 +254,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     /// <summary>
     /// 查询指定键的后一个键
+    /// (未重命名是故意的，Next很容易误用)
     /// </summary>
     /// <param name="key">当前键</param>
     /// <param name="next">接收下一个键</param>
@@ -682,13 +683,14 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     private static readonly Node UnsetNode = new Node(0, default, -1);
     // private static readonly Node DisposedNode = new Node(0, default, default, -1);
 
-    private class SetIterator : IEnumerator<TKey>
+    private class SetIterator : IRemovableIterator<TKey>
     {
         private readonly LinkedHashSet<TKey> _hashSet;
         private readonly bool _reversed;
-
         private int _version;
-        private Node? _node;
+
+        private Node? _currNode;
+        private Node? _nextNode;
         private TKey _current;
 
         internal SetIterator(LinkedHashSet<TKey> hashSet, bool reversed) {
@@ -696,7 +698,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             _reversed = reversed;
             _version = hashSet._version;
 
-            _node = UnsetNode;
+            _nextNode = _reversed ? _hashSet._tail : _hashSet._head;
             _current = default;
         }
 
@@ -704,30 +706,34 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             if (_version != _hashSet._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
-            if (_node == null) {
-                return false;
-            }
-            if (ReferenceEquals(_node, UnsetNode)) {
-                _node = _reversed ? _hashSet._tail : _hashSet._head;
-            }
-            else {
-                _node = _reversed ? _node._prev : _node._next;
-            }
-            if (_node == null) {
+            if (_nextNode == null) {
                 _current = default;
                 return false;
             }
+            Node node = _currNode = _nextNode;
+            _nextNode = _reversed ? node._prev : node._next;
             // 其实这期间node的value可能变化，安全的话应该每次创建新的Pair，但c#系统库没这么干
-            _current = _node._key;
+            _current = node._key;
             return true;
         }
 
+        public void Remove() {
+            if (_version != _hashSet._version) {
+                throw new InvalidOperationException("EnumFailedVersion");
+            }
+            if (_currNode == null) {
+                throw new InvalidOperationException("AlreadyRemoved");
+            }
+            _hashSet.RemoveNode(_currNode);
+            _currNode = null;
+            _version = _hashSet._version;
+        }
 
         public void Reset() {
             if (_version != _hashSet._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
-            _node = _reversed ? _hashSet._tail : _hashSet._head;
+            _nextNode = _reversed ? _hashSet._tail : _hashSet._head;
             _current = default;
         }
 

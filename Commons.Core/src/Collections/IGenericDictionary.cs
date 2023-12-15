@@ -54,13 +54,6 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     PutResult<TValue> Put(TKey key, TValue value);
 
     /// <summary>
-    /// 批量插入
-    /// 如果key已存在则覆盖
-    /// </summary>
-    /// <param name="collection"></param>
-    void PutRange(IEnumerable<KeyValuePair<TKey, TValue>> collection);
-
-    /// <summary>
     /// 字典的原生接口Remove只返回bool值，而更多的情况下我们需要返回值；但C#存在值结构，当value是值类型的时候总是返回值会导致不必要的内存分配。
     /// <see cref="Dictionary{TKey,TValue}"/>中提供了该补偿方法，但未在接口中添加。
     /// </summary>
@@ -68,19 +61,6 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     /// <param name="value">接收返回值</param>
     /// <returns>是否删除成功</returns>
     public bool Remove(TKey key, out TValue value);
-
-    /// <summary>
-    /// 调整空间
-    /// 1.该接口以允许用户触发扩容
-    /// 2.Hash结构通常有较大的辅助空间，提供接口以允许收缩；
-    /// 3.该接口不一定产生效用，与实现类相关，默认空实现
-    /// 4.该接口可能有较大开销，应避免频繁调用
-    /// </summary>
-    /// <param name="expectedCount">期望的元素数量，不是直接的空间大小，不可小于当前count</param>
-    /// <param name="ignoreInitCount">是否允许小于初始设置的元素数量</param>
-    void AdjustCapacity(int expectedCount, bool ignoreInitCount = false) {
-    }
-
 
     #region 接口适配
 
