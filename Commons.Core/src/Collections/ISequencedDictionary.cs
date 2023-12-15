@@ -52,37 +52,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// <param name="defVal">key不存在时的默认值</param>
     /// <returns></returns>
     public TValue GetOrDefault(TKey key, TValue defVal);
-
-    /// <summary>
-    /// 获取元素，并将元素移动到首部
-    /// </summary>
-    /// <param name="key"></param>
-    /// <returns>如果key存在，则返回关联值；否则抛出异常</returns>
-    public TValue GetAndMoveToFirst(TKey key);
-
-    /// <summary>
-    /// 获取元素，并将元素移动到首部
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns>如果元素存在则返回true</returns>
-    public bool TryGetAndMoveToFirst(TKey key, out TValue value);
-
-    /// <summary>
-    /// 获取元素，并将元素移动到尾部
-    /// </summary>
-    /// <param name="key"></param>
-    /// <returns>如果key存在，则返回关联值；否则抛出异常</returns>
-    public TValue GetAndMoveToLast(TKey key);
-
-    /// <summary>
-    /// 获取元素，并将元素移动到尾部
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns>如果元素存在则返回true</returns>
-    public bool TryGetAndMoveToLast(TKey key, out TValue value);
-
+    
     #endregion
 
     #region add

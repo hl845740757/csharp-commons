@@ -63,22 +63,6 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
         return Dictionary.GetOrDefault(key, defVal);
     }
 
-    public TValue GetAndMoveToFirst(TKey key) {
-        return Dictionary.GetAndMoveToLast(key);
-    }
-
-    public bool TryGetAndMoveToFirst(TKey key, out TValue value) {
-        return Dictionary.TryGetAndMoveToLast(key, out value);
-    }
-
-    public TValue GetAndMoveToLast(TKey key) {
-        return Dictionary.GetAndMoveToFirst(key);
-    }
-
-    public bool TryGetAndMoveToLast(TKey key, out TValue value) {
-        return Dictionary.TryGetAndMoveToFirst(key, out value);
-    }
-
     public bool ContainsKey(TKey key) {
         return Dictionary.ContainsKey(key);
     }

@@ -26,13 +26,16 @@ namespace Wjybxx.Commons.Collections;
 
 /// <summary>
 /// 保持插入序的Set
+/// 1.由<see cref="LinkedDictionary{TKey,TValue}"/>修改而来，保留起特性。
+/// 2.使用拷贝而不是封装的方式，以减少使用开销。
+/// 
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 [Serializable]
-public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey>, ISerializable
+public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 {
-    /** 总是延迟分配空间，以减少创建空实例的开销 */
-    private Node?[]? _table;
+    /** len = 2^n + 1，额外的槽用于存储nullKey；总是延迟分配空间，以减少创建空实例的开销 */
+    private Node?[]? _table; // 这个NullableReference有时真的很烦
     private Node? _head;
     private Node? _tail;
 
@@ -88,19 +91,8 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
 
     public int Count => _count;
     public bool IsReadOnly => false;
-    public bool IsSynchronized => false;
-    public object SyncRoot => this;
 
     #region peek
-
-    public bool PeekFirst(out TKey key) {
-        if (_head != null) {
-            key = _head._key;
-            return true;
-        }
-        key = default;
-        return false;
-    }
 
     public TKey First {
         get {
@@ -109,13 +101,13 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         }
     }
 
-    public bool PeekLast(out TKey key) {
-        if (_tail != null) {
-            key = _tail._key;
-            return true;
+    public bool PeekFirst(out TKey key) {
+        if (_head == null) {
+            key = default;
+            return false;
         }
-        key = default;
-        return false;
+        key = _head._key;
+        return true;
     }
 
     public TKey Last {
@@ -125,13 +117,18 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         }
     }
 
-    private static InvalidOperationException CollectionEmptyException() {
-        return new InvalidOperationException("Collection is Empty");
+    public bool PeekLast(out TKey key) {
+        if (_tail == null) {
+            key = default;
+            return false;
+        }
+        key = _tail._key;
+        return true;
     }
 
     #endregion
 
-    #region get
+    #region contains
 
     public bool Contains(TKey key) {
         return GetNode(key) != null;
@@ -139,24 +136,27 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
 
     #endregion
 
-    #region add
 
-    void ICollection<TKey>.Add(TKey key) {
-        TryPut(key, PutBehavior.None);
-    }
+    #region add
 
     public bool Add(TKey key) {
         return TryPut(key, PutBehavior.None);
     }
 
-    public void AddFirst(TKey key) {
-        bool modified = TryPut(key, PutBehavior.MoveToFirst);
-        Debug.Assert(modified);
+    public bool AddFirst(TKey key) {
+        return TryPut(key, PutBehavior.MoveToFirst);
     }
 
-    public void AddLast(TKey key) {
-        bool modified = TryPut(key, PutBehavior.MoveToLast);
-        Debug.Assert(modified);
+    public bool AddLast(TKey key) {
+        return TryPut(key, PutBehavior.MoveToLast);
+    }
+
+    public bool AddFirstIfAbsent(TKey key) {
+        return TryInsert(key, InsertionOrder.Head, InsertionBehavior.None);
+    }
+
+    public bool AddLastIfAbsent(TKey key) {
+        return TryInsert(key, InsertionOrder.Tail, InsertionBehavior.None);
     }
 
     public bool AddRange(IEnumerable<TKey> collection) {
@@ -171,7 +171,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         }
         bool r = false;
         foreach (TKey key in collection) {
-            r = TryPut(key, PutBehavior.None);
+            r |= TryPut(key, PutBehavior.None);
         }
         return r;
     }
@@ -196,14 +196,14 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         throw CollectionEmptyException();
     }
 
-    public bool TryRemoveFirst(out TKey pair) {
+    public bool TryRemoveFirst(out TKey key) {
         Node oldHead = _head;
         if (oldHead == null) {
-            pair = default;
+            key = default;
             return false;
         }
 
-        pair = oldHead._key;
+        key = oldHead._key;
         _count--;
         _version++;
         FixPointers(oldHead);
@@ -219,13 +219,13 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         throw CollectionEmptyException();
     }
 
-    public bool TryRemoveLast(out TKey pair) {
+    public bool TryRemoveLast(out TKey key) {
         Node oldTail = _tail;
         if (oldTail == null) {
-            pair = default;
+            key = default;
             return false;
         }
-        pair = oldTail._key;
+        key = oldTail._key;
 
         _count--;
         _version++;
@@ -237,11 +237,11 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
 
     public void Clear() {
         int count = _count;
-        if (count > 0 && _table != null) {
+        if (count > 0) {
             _count = 0;
             _version++;
             _head = _tail = null;
-            Array.Clear(_table);
+            Array.Clear(_table!);
         }
     }
 
@@ -262,7 +262,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
     public bool NextKey(TKey key, out TKey next) {
         var node = GetNode(key);
         if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
+            throw KeyNotFoundException(key);
         }
         if (node._next != null) {
             next = node._next._key;
@@ -282,7 +282,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
     public bool PrevKey(TKey key, out TKey prev) {
         var node = GetNode(key);
         if (node == null) {
-            throw new KeyNotFoundException(key.ToString());
+            throw KeyNotFoundException(key);
         }
         if (node._prev != null) {
             prev = node._prev._key;
@@ -342,32 +342,20 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         }
     }
 
-    public void CopyTo(Array array, int arrayIndex) {
-        CopyTo(array, arrayIndex, false);
+    #endregion
+
+    #region itr
+
+    public ISequencedSet<TKey> Reversed() {
+        return new ReversedSequenceSetView<TKey>(this);
     }
 
-    public void CopyTo(Array array, int arrayIndex, bool reversed) {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
-        if (array.Rank != 1) throw new ArgumentException("RankMultiDimNotSupported");
+    public IEnumerator<TKey> GetEnumerator() {
+        return new SetIterator(this, false);
+    }
 
-        if (array is TKey[] castArray) {
-            CopyTo(castArray, arrayIndex, reversed);
-        }
-        else {
-            object[]? objects = array as object[];
-            if (objects == null) throw new ArgumentException("InvalidArrayType");
-            if (reversed) {
-                for (Node e = _tail; e != null; e = e._prev) {
-                    objects[arrayIndex++] = e._key;
-                }
-            }
-            else {
-                for (Node e = _head; e != null; e = e._next) {
-                    objects[arrayIndex++] = e._key;
-                }
-            }
-        }
+    public IEnumerator<TKey> GetReversedEnumerator() {
+        return new SetIterator(this, true);
     }
 
     #endregion
@@ -385,10 +373,15 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
     private int Find(TKey key, int hash) {
         Node[] table = _table;
         if (table == null) {
-            table = _table = new Node[_mask + 1];
+            table = _table = new Node[_mask + 2];
         }
-        int mask = _mask;
+        if (key == null) {
+            Node nullNode = table[_mask + 1];
+            return nullNode == null ? -(_mask + 2) : (_mask + 1);
+        }
+
         IEqualityComparer<TKey> keyComparer = _keyComparer;
+        int mask = _mask;
         // 先测试无冲突位置
         int pos = mask & hash;
         Node node = table[pos];
@@ -397,7 +390,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
             return pos;
         }
         // 线性探测
-        // 注意：为了利用空间，线性探测需要在越界时绕回到数组首部(mask取余绕回)
+        // 注意：为了利用空间，线性探测需要在越界时绕回到数组首部(mask取余绕回)；'i'就是探测次数
         // 由于数组满时一定会触发扩容，可保证这里一定有一个槽为null；如果循环一圈失败，上次扩容失败被捕获？
         for (int i = 0; i < mask; i++) {
             pos = (pos + 1) & mask;
@@ -416,10 +409,13 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         if (table == null || _count == 0) {
             return null;
         }
-        int mask = _mask;
+        if (key == null) {
+            return table[_mask + 1];
+        }
         IEqualityComparer<TKey> keyComparer = _keyComparer;
-        int hash = HashCommon.Mix(key == null ? 0 : keyComparer.GetHashCode(key));
+        int mask = _mask;
         // 先测试无冲突位置
+        int hash = KeyHash(key, keyComparer);
         int pos = mask & hash;
         Node node = table[pos];
         if (node == null) return null;
@@ -437,9 +433,25 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         throw new InvalidOperationException("state error");
     }
 
-    /** 如果是新key则返回true */
-    private bool TryPut(TKey? key, PutBehavior behavior) {
-        int hash = HashCommon.Mix(key == null ? 0 : _keyComparer.GetHashCode(key));
+    /** 如果是insert则返回true */
+    private bool TryInsert(TKey key, InsertionOrder order, InsertionBehavior behavior) {
+        int hash = KeyHash(key, _keyComparer);
+        int pos = Find(key, hash);
+        if (pos >= 0) {
+            if (behavior == InsertionBehavior.ThrowOnExisting) {
+                throw new InvalidOperationException("AddingDuplicateWithKey: " + key);
+            }
+            return false;
+        }
+
+        pos = -pos - 1;
+        Insert(pos, hash, key, order);
+        return true;
+    }
+
+    /** 如果是insert则返回true */
+    private bool TryPut(TKey key, PutBehavior behavior) {
+        int hash = KeyHash(key, _keyComparer);
         int pos = Find(key, hash);
         if (pos >= 0) {
             Node existNode = _table![pos]!;
@@ -494,7 +506,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
     private void Rehash(int newSize) {
         Debug.Assert(newSize >= _count);
         Node[] oldTable = _table!;
-        Node[] newTable = new Node[newSize];
+        Node[] newTable = new Node[newSize + 1];
 
         int mask = newSize - 1;
         int pos;
@@ -505,9 +517,14 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
             if (node == null) {
                 continue;
             }
-            pos = node._hash & mask;
-            while (newTable[pos] != null) {
-                pos = (pos + 1) & mask;
+            if (node._key == null) {
+                pos = mask + 1;
+            }
+            else {
+                pos = node._hash & mask;
+                while (newTable[pos] != null) {
+                    pos = (pos + 1) & mask;
+                }
             }
             newTable[pos] = node;
             node._index = pos;
@@ -549,6 +566,9 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
     /// </summary>
     /// <param name="pos"></param>
     private void ShiftKeys(int pos) {
+        if (pos == _mask + 1) { // nullKey
+            return;
+        }
         Node[] table = _table!;
         int mask = _mask;
 
@@ -640,50 +660,55 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
 
     #endregion
 
-    #region itr
+    #region util
 
-    public ISequencedSet<TKey> Reversed() {
-        return new ReversedSequenceSetView<TKey>(this);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int KeyHash(TKey? key, IEqualityComparer<TKey> keyComparer) {
+        return key == null ? 0 : HashCommon.Mix(keyComparer.GetHashCode(key));
     }
 
-    public IEnumerator<TKey> GetEnumerator() {
-        return new SetIterator(this, false);
+    private static InvalidOperationException CollectionEmptyException() {
+        return new InvalidOperationException("Dictionary is Empty");
     }
 
-    public IEnumerator<TKey> GetReversedEnumerator() {
-        return new SetIterator(this, true);
+    private static KeyNotFoundException KeyNotFoundException(TKey key) {
+        return new KeyNotFoundException(key == null ? "null" : key.ToString());
     }
+
+    #endregion
+
+    #region view
 
     private static readonly Node UnsetNode = new Node(0, default, -1);
-    private static readonly Node DisposedNode = new Node(0, default, -1);
+    // private static readonly Node DisposedNode = new Node(0, default, default, -1);
 
     private class SetIterator : IEnumerator<TKey>
     {
-        private readonly LinkedHashSet<TKey> _dictionary;
+        private readonly LinkedHashSet<TKey> _hashSet;
         private readonly bool _reversed;
 
         private int _version;
         private Node? _node;
         private TKey _current;
 
-        internal SetIterator(LinkedHashSet<TKey> dictionary, bool reversed) {
-            _dictionary = dictionary;
+        internal SetIterator(LinkedHashSet<TKey> hashSet, bool reversed) {
+            _hashSet = hashSet;
             _reversed = reversed;
-            _version = dictionary._version;
+            _version = hashSet._version;
 
             _node = UnsetNode;
             _current = default;
         }
 
         public bool MoveNext() {
-            if (_version != _dictionary._version) {
+            if (_version != _hashSet._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
             if (_node == null) {
                 return false;
             }
             if (ReferenceEquals(_node, UnsetNode)) {
-                _node = _reversed ? _dictionary._tail : _dictionary._head;
+                _node = _reversed ? _hashSet._tail : _hashSet._head;
             }
             else {
                 _node = _reversed ? _node._prev : _node._next;
@@ -697,11 +722,12 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
             return true;
         }
 
+
         public void Reset() {
-            if (_version != _dictionary._version) {
+            if (_version != _hashSet._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
-            _node = _reversed ? _dictionary._tail : _dictionary._head;
+            _node = _reversed ? _hashSet._tail : _hashSet._head;
             _current = default;
         }
 
@@ -713,22 +739,18 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         }
     }
 
-    #endregion
-
-    #region Node
-
-    private class Node : IEquatable<Node>
+    private class Node
     {
         /** 由于Key的hash使用频率极高，缓存以减少求值开销 */
         internal readonly int _hash;
-        internal readonly TKey _key;
+        internal readonly TKey? _key;
         /** 由于使用线性探测法，删除的元素不一定直接位于hash槽上，需要记录，以便快速删除；-1表示已删除 */
         internal int _index;
 
         internal Node? _prev;
         internal Node? _next;
 
-        public Node(int hash, TKey key, int index) {
+        public Node(int hash, TKey? key, int index) {
             _hash = hash;
             _key = key;
             _index = index;
@@ -744,34 +766,9 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
             return _hash; // 不使用value计算hash，因为value可能在中途变更
         }
 
-        #region equals
-
-        public bool Equals(Node? other) {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return EqualityComparer<TKey>.Default.Equals(_key, other._key);
-        }
-
-        public override bool Equals(object? obj) {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Node)obj);
-        }
-
-        public static bool operator ==(Node? left, Node? right) {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Node? left, Node? right) {
-            return !Equals(left, right);
-        }
-
         public override string ToString() {
             return $"{nameof(_key)}: {_key}";
         }
-
-        #endregion
     }
 
     #endregion
@@ -822,13 +819,13 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         Node head;
         {
             TKey key = keyArray[0];
-            int hash = HashCommon.Mix(key == null ? 0 : keyComparer.GetHashCode(key));
+            int hash = KeyHash(key, keyComparer);
             head = new Node(hash, key, -1);
         }
         Node tail = head;
         for (var i = 1; i < keyArray.Length; i++) {
-            TKey key = keyArray[i];
-            int hash = HashCommon.Mix(key == null ? 0 : keyComparer.GetHashCode(key));
+            TKey key = keyArray[0];
+            int hash = KeyHash(key, keyComparer);
             Node next = new Node(hash, key, -1);
             //
             tail._next = next;
@@ -839,13 +836,18 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, IReadOnlyCollection<TKey
         _tail = tail;
 
         // 散列到数组 -- 不走rehash避免创建辅助空间
-        Node[] newTable = new Node[_mask + 1];
+        Node[] newTable = new Node[_mask + 2];
         int mask = _mask;
         int pos;
         for (Node node = _head; node != null; node = node._next) {
-            pos = node._hash & mask;
-            while (newTable[pos] != null) {
-                pos = (pos + 1) & mask;
+            if (node._key == null) {
+                pos = mask + 1;
+            }
+            else {
+                pos = node._hash & mask;
+                while (newTable[pos] != null) {
+                    pos = (pos + 1) & mask;
+                }
             }
             newTable[pos] = node;
             node._index = pos;

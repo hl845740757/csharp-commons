@@ -31,10 +31,48 @@ public interface ISequencedSet<T> : ISequencedCollection<T>, IGenericSet<T>
     /// <returns></returns>
     new ISequencedSet<T> Reversed();
 
+    /// <summary>
+    /// 添加元素到Set的首部；
+    /// 如果是新元素，则返回true，如果元素已存在，则移动到首部。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns>如果是新元素则返回true，否则返回false</returns>
+    new bool AddFirst(T item);
+
+    /// <summary>
+    /// 添加元素到Set的尾部。
+    /// 如果是新元素，则返回true，如果元素已存在，则移动到尾部。
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns>如果是新元素则返回true，否则返回false</returns>
+    new bool AddLast(T item);
+
+    /// <summary>
+    /// 仅在元素不存在的情况下将元素添加到首部
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns>如果是新元素则返回true，否则返回false</returns>
+    bool AddFirstIfAbsent(T item);
+
+    /// <summary>
+    /// 仅在元素不存在的情况下将元素添加到尾部
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns>如果是新元素则返回true，否则返回false</returns>
+    bool AddLastIfAbsent(T item);
+
     #region 接口适配
 
     ISequencedCollection<T> ISequencedCollection<T>.Reversed() {
         return Reversed();
+    }
+
+    void ISequencedCollection<T>.AddFirst(T item) {
+        AddFirst(item);
+    }
+
+    void ISequencedCollection<T>.AddLast(T item) {
+        AddLast(item);
     }
 
     #endregion

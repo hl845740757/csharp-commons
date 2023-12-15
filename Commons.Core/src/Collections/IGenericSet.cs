@@ -41,7 +41,27 @@ public interface IGenericSet<T> : IGenericCollection<T>
         return r;
     }
 
+    /// <summary>
+    /// 调整空间
+    /// 1.该接口以允许用户触发扩容
+    /// 2.Hash结构通常有较大的辅助空间，提供接口以允许收缩；
+    /// 3.该接口不一定产生效用，与实现类相关，默认空实现
+    /// 4.该接口可能有较大开销，应避免频繁调用
+    /// </summary>
+    /// <param name="expectedCount">期望的元素数量，不是直接的空间大小，不可小于当前count</param>
+    /// <param name="ignoreInitCount">是否允许小于初始设置的元素数量</param>
+    void AdjustCapacity(int expectedCount, bool ignoreInitCount = false) {
+    }
+
+    #region 接口适配
+
+    void ICollection<T>.Add(T item) {
+        Add(item);
+    }
+
     void IGenericCollection<T>.AddRange(IEnumerable<T> collection) {
         AddRange(collection);
     }
+
+    #endregion
 }

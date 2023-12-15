@@ -19,7 +19,6 @@
 
 using System.Collections;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
@@ -77,11 +76,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public LinkedDictionary()
         : this(0, HashCommon.DefaultLoadFactor) {
-    }
-
-    public LinkedDictionary(IDictionary<TKey, TValue> src)
-        : this(src.Count, HashCommon.DefaultLoadFactor) {
-        PutRange(src);
     }
 
     public LinkedDictionary(IEqualityComparer<TKey> comparer)
@@ -158,7 +152,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public KeyValuePair<TKey, TValue> First {
         get {
-            if (_head == null) throw DictionaryEmptyException();
+            if (_head == null) throw CollectionEmptyException();
             return _head.AsPair();
         }
     }
@@ -174,14 +168,14 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public KeyValuePair<TKey, TValue> Last {
         get {
-            if (_tail == null) throw DictionaryEmptyException();
+            if (_tail == null) throw CollectionEmptyException();
             return _tail.AsPair();
         }
     }
 
     public TKey FirstKey {
         get {
-            if (_head == null) throw DictionaryEmptyException();
+            if (_head == null) throw CollectionEmptyException();
             return _head._key;
         }
     }
@@ -197,7 +191,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public TKey LastKey {
         get {
-            if (_tail == null) throw DictionaryEmptyException();
+            if (_tail == null) throw CollectionEmptyException();
             return _tail._key;
         }
     }
@@ -266,46 +260,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public TValue GetOrDefault(TKey key, TValue defVal) {
         var node = GetNode(key);
         return node == null ? defVal : node._value;
-    }
-
-    public TValue GetAndMoveToFirst(TKey key) {
-        var node = GetNode(key);
-        if (node == null) {
-            throw KeyNotFoundException(key);
-        }
-        MoveToFirst(node);
-        return node._value;
-    }
-
-    public bool TryGetAndMoveToFirst(TKey key, out TValue value) {
-        var node = GetNode(key);
-        if (node == null) {
-            value = default;
-            return false;
-        }
-        MoveToFirst(node);
-        value = node._value;
-        return true;
-    }
-
-    public TValue GetAndMoveToLast(TKey key) {
-        var node = GetNode(key);
-        if (node == null) {
-            throw KeyNotFoundException(key);
-        }
-        MoveToLast(node);
-        return node._value;
-    }
-
-    public bool TryGetAndMoveToLast(TKey key, out TValue value) {
-        var node = GetNode(key);
-        if (node == null) {
-            value = default;
-            return false;
-        }
-        MoveToLast(node);
-        value = node._value;
-        return true;
     }
 
     #endregion
@@ -426,7 +380,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (TryRemoveFirst(out KeyValuePair<TKey, TValue> r)) {
             return r;
         }
-        throw DictionaryEmptyException();
+        throw CollectionEmptyException();
     }
 
     public bool TryRemoveFirst(out KeyValuePair<TKey, TValue> pair) {
@@ -449,7 +403,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (TryRemoveLast(out KeyValuePair<TKey, TValue> r)) {
             return r;
         }
-        throw DictionaryEmptyException();
+        throw CollectionEmptyException();
     }
 
     public bool TryRemoveLast(out KeyValuePair<TKey, TValue> pair) {
@@ -484,6 +438,69 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     #endregion
 
     #region sp
+
+    /// <summary>
+    /// 获取元素，并将元素移动到首部
+    /// （这几个接口不适合定义在接口中，因为只有查询效率高的有序字典才可以定义）
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns>如果key存在，则返回关联值；否则抛出异常</returns>
+    public TValue GetAndMoveToFirst(TKey key) {
+        var node = GetNode(key);
+        if (node == null) {
+            throw KeyNotFoundException(key);
+        }
+        MoveToFirst(node);
+        return node._value;
+    }
+
+    /// <summary>
+    /// 获取元素，并将元素移动到首部
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns>如果元素存在则返回true</returns>
+    public bool TryGetAndMoveToFirst(TKey key, out TValue value) {
+        var node = GetNode(key);
+        if (node == null) {
+            value = default;
+            return false;
+        }
+        MoveToFirst(node);
+        value = node._value;
+        return true;
+    }
+
+    /// <summary>
+    /// 获取元素，并将元素移动到尾部
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns>如果key存在，则返回关联值；否则抛出异常</returns>
+    public TValue GetAndMoveToLast(TKey key) {
+        var node = GetNode(key);
+        if (node == null) {
+            throw KeyNotFoundException(key);
+        }
+        MoveToLast(node);
+        return node._value;
+    }
+
+    /// <summary>
+    /// 获取元素，并将元素移动到尾部
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns>如果元素存在则返回true</returns>
+    public bool TryGetAndMoveToLast(TKey key, out TValue value) {
+        var node = GetNode(key);
+        if (node == null) {
+            value = default;
+            return false;
+        }
+        MoveToLast(node);
+        value = node._value;
+        return true;
+    }
 
     /// <summary>
     /// 查询指定键的后一个键
@@ -698,6 +715,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         throw new InvalidOperationException("state error");
     }
 
+    /** 如果value被应用，则返回true */
     private bool TryInsert(TKey key, TValue value, InsertionOrder order, InsertionBehavior behavior) {
         int hash = KeyHash(key, _keyComparer);
         int pos = Find(key, hash);
@@ -721,6 +739,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return true;
     }
 
+    /** 如果是insert则返回true */
     private PutResult<TValue> TryPut(TKey key, TValue value, PutBehavior behavior) {
         int hash = KeyHash(key, _keyComparer);
         int pos = Find(key, hash);
@@ -937,11 +956,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     private IEqualityComparer<TValue> ValComparer => EqualityComparer<TValue>.Default;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int KeyHash(TKey? key, IEqualityComparer<TKey> keyComparer) {
         return key == null ? 0 : HashCommon.Mix(keyComparer.GetHashCode(key));
     }
 
-    private static InvalidOperationException DictionaryEmptyException() {
+    private static InvalidOperationException CollectionEmptyException() {
         return new InvalidOperationException("Dictionary is Empty");
     }
 
@@ -1070,7 +1090,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         private static TValue CheckNodeValue(Node? node) {
-            if (node == null) throw DictionaryEmptyException();
+            if (node == null) throw CollectionEmptyException();
             return node._value;
         }
 
