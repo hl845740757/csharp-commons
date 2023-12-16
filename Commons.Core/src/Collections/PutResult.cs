@@ -41,7 +41,6 @@ public readonly struct PutResult<TValue>
 
     /// <summary>
     /// Key关联的旧值
-    /// （key不存在的情况下，可能返回预设的默认值）
     /// </summary>
     public TValue PrevValue => _prevValue;
 }

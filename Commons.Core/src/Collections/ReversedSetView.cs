@@ -30,8 +30,8 @@ public class ReversedSequenceSetView<TKey> : ReversedCollectionView<TKey>, ISequ
         return (ISequencedSet<TKey>)_delegated;
     }
 
-    public new bool Add(TKey item) {
-        return Delegated.Add(item); // 不颠倒顺序
+    public new virtual bool Add(TKey item) {
+        return Delegated.Add(item); // 不颠倒顺序，但允许重写
     }
 
     public new bool AddFirst(TKey item) {

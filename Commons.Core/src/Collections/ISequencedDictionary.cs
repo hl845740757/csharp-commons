@@ -23,6 +23,13 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 {
     new ISequencedDictionary<TKey, TValue> Reversed();
 
+    /// <summary>
+    /// 获取不安全的key集合视图，对key的删除将作用于原始的字典
+    /// </summary>
+    /// <param name="reversed">是否反转</param>
+    /// <returns></returns>
+    ISequencedCollection<TKey> UnsafeKeys(bool reversed = false);
+
     #region get
 
     new ISequencedCollection<TKey> Keys { get; }
@@ -36,23 +43,6 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 
     public bool PeekLastKey(out TKey key);
 
-    /// <summary>
-    /// 获取key关联的值，如果关联的值不存在，则返回预设的默认值。
-    /// 1.如果字典支持自定义默认值，则返回自定义默认值。
-    /// 2.如果字典不支持自定义默认值，则返回default分配的对象。
-    /// </summary>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    public TValue GetOrDefault(TKey key);
-
-    /// <summary>
-    /// 获取key关联的值，如果关联的值不存在，则返回给定的默认值。
-    /// </summary>
-    /// <param name="key">key</param>
-    /// <param name="defVal">key不存在时的默认值</param>
-    /// <returns></returns>
-    public TValue GetOrDefault(TKey key, TValue defVal);
-    
     #endregion
 
     #region add
@@ -114,6 +104,10 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 
     ISequencedCollection<KeyValuePair<TKey, TValue>> ISequencedCollection<KeyValuePair<TKey, TValue>>.Reversed() {
         return Reversed();
+    }
+
+    IGenericCollection<TKey> IGenericDictionary<TKey, TValue>.UnsafeKeys() {
+        return UnsafeKeys();
     }
 
     #endregion

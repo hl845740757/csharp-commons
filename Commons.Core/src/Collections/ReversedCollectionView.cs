@@ -27,14 +27,14 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
     }
 
     public int Count => _delegated.Count();
-    public bool IsReadOnly => true;
+    public bool IsReadOnly => false;
 
     public virtual ISequencedCollection<TKey> Reversed() {
         return _delegated;
     }
 
-    public void AdjustCapacity(int expectedCount, bool ignoreInitCount = false) {
-        _delegated.AdjustCapacity(expectedCount, ignoreInitCount);
+    public void AdjustCapacity(int expectedCount) {
+        _delegated.AdjustCapacity(expectedCount);
     }
 
     #region get

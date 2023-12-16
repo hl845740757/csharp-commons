@@ -27,5 +27,5 @@ public interface IRemovableIterator<out T> : IEnumerator<T>
     /// <summary>
     /// 删除当前元素
     /// </summary>
-    void Remove();
+    bool Remove();
 }

@@ -26,4 +26,6 @@ public enum CollectionOption : byte
 {
     /** 在负载小于一定值的情况下自动缩减容量 */
     AutoTrim = 1 << 0,
+    /** 序列化字典的默认值 */
+    SerialDefValue = 1 << 1,
 }

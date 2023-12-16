@@ -204,6 +204,7 @@ public static class CollectionUtil
 
     /// <summary>
     /// 批量Add元素
+    /// (没有继承ISet接口，因此需要独立的扩展方法)
     /// </summary>
     /// <returns>新插入的元素个数</returns>
     public static int AddAll<T>(this IGenericSet<T> self, IEnumerable<T> items) {
@@ -224,7 +225,7 @@ public static class CollectionUtil
     #region dictionary
 
     /// <summary>
-    /// 批量Add元素 -- 如果Key已存在，则覆盖
+    /// 批量添加元素 -- 如果Key已存在，则覆盖
     /// </summary>
     public static void PutAll<TKey, TValue>(this IGenericDictionary<TKey, TValue> self, IEnumerable<KeyValuePair<TKey, TValue>> pairs) {
         if (self == null) throw new ArgumentNullException(nameof(self));
@@ -238,52 +239,11 @@ public static class CollectionUtil
     }
 
     /// <summary>
-    /// 批量删除元素
+    /// 获取key关联的值，如果关联的值不存在，则返回给定的默认值。
     /// </summary>
-    public static int RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> self, IEnumerable<TKey> keys) {
+    public static TValue GetValueOrDefault<TKey, TValue>(this IGenericDictionary<TKey, TValue> self, TKey key, TValue defValue) {
         if (self == null) throw new ArgumentNullException(nameof(self));
-        if (keys == null) throw new ArgumentNullException(nameof(keys));
-        int r = 0;
-        foreach (TKey key in keys) {
-            if (self.Remove(key)) r++;
-        }
-        return r;
-    }
-
-    /// <summary>
-    /// 删除不在保留集合中的Key
-    /// （C#的迭代器不支持迭代时删除，因此只能先收集key；由于开销可能较大，不定义为扩展方法，需要显式调用）
-    /// </summary>
-    /// <param name="self"></param>
-    /// <param name="retainKeys"></param>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    /// <exception cref="ArgumentNullException"></exception>
-    public static void RetainAll<TKey, TValue>(this IDictionary<TKey, TValue> self, ICollection<TKey> retainKeys) {
-        if (self == null) throw new ArgumentNullException(nameof(self));
-        if (retainKeys == null) throw new ArgumentNullException(nameof(retainKeys));
-
-        IEnumerator<KeyValuePair<TKey, TValue>> itr = self.GetEnumerator();
-        if (itr is IRemovableIterator<KeyValuePair<TKey, TValue>> betterItr) {
-            while (betterItr.MoveNext()) {
-                TKey key = betterItr.Current.Key;
-                if (!retainKeys.Contains(key)) {
-                    betterItr.Remove();
-                }
-            }
-        }
-        else {
-            List<TKey> needRemoveKeys = new List<TKey>();
-            while (itr.MoveNext()) {
-                TKey key = itr.Current.Key;
-                if (!retainKeys.Contains(key)) {
-                    needRemoveKeys.Add(key);
-                }
-            }
-            for (var i = 0; i < needRemoveKeys.Count; i++) {
-                self.Remove(needRemoveKeys[i]);
-            }
-        }
+        return self.TryGetValue(key, out TValue value) ? value : defValue;
     }
 
     #endregion

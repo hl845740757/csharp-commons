@@ -20,6 +20,7 @@ namespace Wjybxx.Commons.Collections;
 
 /// <summary>
 /// 字典Put操作对应的行为
+/// (put一定覆盖旧值)
 /// </summary>
 internal enum PutBehavior : byte
 {

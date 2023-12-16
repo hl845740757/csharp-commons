@@ -72,10 +72,16 @@ public class LinkedDictionaryTest
     }
 
     private static LinkedDictionary<string, string> TestStringDic(int expectedCount) {
-        List<string> keyList = new List<string>(expectedCount);
         LinkedDictionary<string, string> dictionary = new LinkedDictionary<string, string>(expectedCount / 3); // 顺便测试扩容
+        dictionary.DefaultValue = "wjybxx";
+        // 测试默认值
+        {
+            dictionary.TryGetValueOrDefault("abc", out string value);
+            Assert.That(value, Is.EqualTo(dictionary.DefaultValue));
+        }
 
-        var buffer = new byte[12];
+        byte[] buffer = new byte[12];
+        List<string> keyList = new List<string>(expectedCount);
         while (dictionary.Count < expectedCount) {
             Random.Shared.NextBytes(buffer);
             string next = Convert.ToHexString(buffer);
@@ -84,12 +90,22 @@ public class LinkedDictionaryTest
                 keyList.Add(key);
             }
         }
-        Assert.That(dictionary.Count, Is.EqualTo(keyList.Count));
 
+        Assert.That(dictionary.Count, Is.EqualTo(keyList.Count));
+        // 顺序迭代测试
         int index = 0;
-        foreach (KeyValuePair<string, string> pair in dictionary) {
+        foreach (var realKey in dictionary.Keys) {
             var expectedKey = keyList[index++];
-            var realKey = pair.Key;
+            if (expectedKey != realKey) {
+                throw new InvalidOperationException($"expectedKey:{expectedKey} == realKey:{realKey}");
+            }
+        }
+        // 逆序迭代测试
+        index = keyList.Count - 1;
+        var reversedEnumerator = dictionary.Keys.GetReversedEnumerator();
+        while (reversedEnumerator.MoveNext()) {
+            var expectedKey = keyList[index--];
+            string realKey = reversedEnumerator.Current;
             if (expectedKey != realKey) {
                 throw new InvalidOperationException($"expectedKey:{expectedKey} == realKey:{realKey}");
             }
@@ -110,6 +126,7 @@ public class LinkedDictionaryTest
     [Test]
     public void SerialTest() {
         LinkedDictionary<string, string> dictionary = TestStringDic(1000);
+
         BinaryFormatter formatter = new BinaryFormatter();
         MemoryStream stream = new MemoryStream(new byte[64 * 1024]);
         formatter.Serialize(stream, dictionary);
@@ -120,6 +137,7 @@ public class LinkedDictionaryTest
             string value2 = dictionary2[pair.Key];
             Assert.That(value2, Is.EqualTo(pair.Value));
         }
+        Assert.That(dictionary2.DefaultValue, Is.EqualTo(dictionary.DefaultValue));
     }
 #pragma warning restore SYSLIB0011
 
@@ -137,5 +155,8 @@ public class LinkedDictionaryTest
 
         Assert.True(dictionary.NextKey("key1", out nextKey));
         Assert.That(nextKey, Is.EqualTo("key2"));
+
+        dictionary.Remove(null);
+        Assert.That(dictionary.FirstKey, Is.EqualTo("key1"));
     }
 }

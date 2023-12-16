@@ -29,9 +29,13 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
     public ISequencedCollection<TKey> Keys => Delegated.Keys;
     public ISequencedCollection<TValue> Values => Delegated.Values;
 
-    public TValue this[TKey key] {
+    public ISequencedCollection<TKey> UnsafeKeys(bool reversed = false) {
+        return Delegated.UnsafeKeys(reversed);
+    }
+
+    public virtual TValue this[TKey key] {
         get => Delegated[key];
-        set => Delegated[key] = value; // 等同add
+        set => Delegated[key] = value; // 等同add，允许重写
     }
 
     public override ISequencedDictionary<TKey, TValue> Reversed() {
@@ -55,12 +59,8 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
         return Delegated.TryGetValue(key, out value);
     }
 
-    public TValue GetOrDefault(TKey key) {
-        return Delegated.GetOrDefault(key);
-    }
-
-    public TValue GetOrDefault(TKey key, TValue defVal) {
-        return Delegated.GetOrDefault(key, defVal);
+    public bool TryGetValueOrDefault(TKey key, out TValue value) {
+        return Delegated.TryGetValueOrDefault(key, out value);
     }
 
     public bool ContainsKey(TKey key) {

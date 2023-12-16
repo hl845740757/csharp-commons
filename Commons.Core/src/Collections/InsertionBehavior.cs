@@ -20,22 +20,17 @@ namespace Wjybxx.Commons.Collections;
 
 /// <summary>
 /// 如果要插入的元素已存在，要执行的行为枚举
-/// 该枚举在系统库中存在，但未开放，因此我们再定义一个
+/// (insert一定不覆盖旧值)
 /// </summary>
 internal enum InsertionBehavior : byte
 {
     /// <summary>
-    /// 什么也不做
+    /// 什么也不做（放弃）
     /// </summary>
     None = 0,
 
     /// <summary>
-    /// 覆盖当前值
-    /// </summary>
-    OverwriteExisting = 1,
-
-    /// <summary>
     /// 抛出异常
     /// </summary>
-    ThrowOnExisting = 2
+    ThrowOnExisting = 1
 }

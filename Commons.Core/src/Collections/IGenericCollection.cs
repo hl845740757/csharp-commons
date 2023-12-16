@@ -32,7 +32,7 @@ namespace Wjybxx.Commons.Collections;
 /// <typeparam name="T"></typeparam>
 public interface IGenericCollection<T> : ICollection<T>, IReadOnlyCollection<T>
 {
-    public new int Count { get; }
+    new int Count { get; }
 
     /// <summary>
     /// 调整空间
@@ -43,8 +43,7 @@ public interface IGenericCollection<T> : ICollection<T>, IReadOnlyCollection<T>
     /// 5.该接口可能有较大开销，应避免频繁调用;
     /// </summary>
     /// <param name="expectedCount">期望的元素数量，不是直接的空间大小，不可小于当前count</param>
-    /// <param name="ignoreInitCount">是否允许小于初始设置的元素数量</param>
-    void AdjustCapacity(int expectedCount, bool ignoreInitCount = false);
+    void AdjustCapacity(int expectedCount);
 
     #region 接口适配
 

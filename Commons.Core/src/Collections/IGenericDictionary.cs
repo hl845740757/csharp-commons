@@ -27,15 +27,37 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     new IGenericCollection<TKey> Keys { get; }
     new IGenericCollection<TValue> Values { get; }
 
+    new bool ContainsKey(TKey key);
+
+    /// <summary>
+    /// 获取允许删除元素的Key集合，删除会作用于原始字典。
+    /// 在C#的集合中，Keys和Values默认都是只读的，这在多数情况下都是好的选择；但有时我们也确实需要能通过Keys集合删除元素。
+    /// 直接通过Values删除字典元素的情况很不常见，因此不提供额外支持。
+    /// </summary>
+    IGenericCollection<TKey> UnsafeKeys();
+
+    /// <summary>
+    /// 获取key关联的值，如果关联的值不存在，则返回default分配的对象。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value">接受返回值</param>
+    /// <returns>如果key存在则返回true；否则返回false</returns>
     new bool TryGetValue(TKey key, out TValue value);
 
-    new bool ContainsKey(TKey key);
+    /// <summary>
+    /// 获取key关联的值，如果关联的值不存在，则返回预设的默认值。
+    /// 1.如果字典支持 自定义默认值，则返回自定义默认值；否则返回default分配的对象。
+    /// 2.为避免实例被向上转型后可能走到扩展方法，从而导致混淆，因此不命名<code>GetValueOrDefault</code>。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value">接受返回值</param>
+    /// <returns>如果key存在则返回true；否则返回false</returns>
+    bool TryGetValueOrDefault(TKey key, out TValue value);
 
     /// <summary>
     /// 是否包含给定的Value
     /// (看似IDictionary没定义此接口，实际上却必须要实现，因为Values集合要实现Contains)
     /// </summary>
-    /// <param name="value"></param>
     /// <returns></returns>
     bool ContainsValue(TValue value);
 
@@ -60,7 +82,7 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     /// <param name="key"></param>
     /// <param name="value">接收返回值</param>
     /// <returns>是否删除成功</returns>
-    public bool Remove(TKey key, out TValue value);
+    bool Remove(TKey key, out TValue value);
 
     #region 接口适配
 
