@@ -271,21 +271,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #region add
 
-    public void Add(KeyValuePair<TKey, TValue> item) {
-        bool inserted = TryInsert(item.Key, item.Value, InsertionOrder.Default, InsertionBehavior.ThrowOnExisting);
-        Debug.Assert(inserted);
-    }
-
-    public void AddFirst(KeyValuePair<TKey, TValue> item) {
-        bool inserted = TryInsert(item.Key, item.Value, InsertionOrder.Head, InsertionBehavior.ThrowOnExisting);
-        Debug.Assert(inserted);
-    }
-
-    public void AddLast(KeyValuePair<TKey, TValue> item) {
-        bool inserted = TryInsert(item.Key, item.Value, InsertionOrder.Tail, InsertionBehavior.ThrowOnExisting);
-        Debug.Assert(inserted);
-    }
-
     public void Add(TKey key, TValue value) {
         bool inserted = TryInsert(key, value, InsertionOrder.Default, InsertionBehavior.ThrowOnExisting);
         Debug.Assert(inserted);
@@ -961,8 +946,34 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             _reversed = reversed;
         }
 
+        #region 查询
+
         public virtual bool IsReadOnly => true;
         public int Count => _dictionary.Count;
+
+        public abstract bool Contains(T item);
+
+        public abstract bool PeekFirst(out T item);
+
+        public abstract T First { get; }
+
+        public abstract bool PeekLast(out T item);
+
+        public abstract T Last { get; }
+
+        #endregion
+
+        #region itr
+
+        public abstract ISequencedCollection<T> Reversed();
+
+        public abstract IEnumerator<T> GetEnumerator();
+
+        public abstract IEnumerator<T> GetReversedEnumerator();
+
+        public abstract void CopyTo(T[] array, int arrayIndex, bool reversed = false);
+
+        #endregion
 
         #region modify
 
@@ -1007,24 +1018,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         #endregion
-
-        public abstract bool Contains(T item);
-
-        public abstract bool PeekFirst(out T item);
-
-        public abstract T First { get; }
-
-        public abstract bool PeekLast(out T item);
-
-        public abstract T Last { get; }
-
-        public abstract ISequencedCollection<T> Reversed();
-
-        public abstract IEnumerator<T> GetEnumerator();
-
-        public abstract IEnumerator<T> GetReversedEnumerator();
-
-        public abstract void CopyTo(T[] array, int arrayIndex, bool reversed = false);
     }
 
     private class KeyCollection : AbstractViewCollection<TKey>, ISequencedCollection<TKey>

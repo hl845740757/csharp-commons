@@ -28,7 +28,7 @@ public static class DatetimeUtil
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static long ToEpochSeconds(this DateTime dateTime) {
+    public static long ToEpochSeconds(DateTime dateTime) {
         return (long)dateTime.Subtract(DateTime.UnixEpoch).TotalSeconds;
     }
 
@@ -37,7 +37,7 @@ public static class DatetimeUtil
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static long ToEpochMillis(this DateTime dateTime) {
+    public static long ToEpochMillis(DateTime dateTime) {
         return (long)dateTime.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
     }
 }

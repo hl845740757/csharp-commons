@@ -110,5 +110,17 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
         return UnsafeKeys();
     }
 
+    void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) {
+        Add(item.Key, item.Value);
+    }
+
+    void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddFirst(KeyValuePair<TKey, TValue> item) {
+        AddFirst(item.Key, item.Value);
+    }
+
+    void ISequencedCollection<KeyValuePair<TKey, TValue>>.AddLast(KeyValuePair<TKey, TValue> item) {
+        AddLast(item.Key, item.Value);
+    }
+
     #endregion
 }

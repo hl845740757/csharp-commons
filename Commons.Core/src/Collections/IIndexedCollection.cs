@@ -19,13 +19,11 @@
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 集合的特征值，按比特位存储
+/// 在元素身上存储了索引信息的集合。
+/// 1.这类集合禁止重复添加元素，且使用引用相等判断重复
+/// 2.更多用于非连续存储的集合。
 /// </summary>
-[Flags]
-public enum CollectionOption : byte
+/// <typeparam name="T"></typeparam>
+public interface IIndexedCollection<T> : IGenericCollection<T> where T : class, IIndexedElement
 {
-    /** 在负载小于一定值的情况下自动缩减容量 */
-    AutoTrim = 1 << 0,
-    /** 序列化字典的默认值 */
-    SerialDefaultValue = 1 << 1,
 }

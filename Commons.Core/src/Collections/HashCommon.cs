@@ -17,7 +17,7 @@
 #endregion
 
 using System.Runtime.CompilerServices;
-using static Wjybxx.Commons.Collections.MathCommon;
+using static Wjybxx.Commons.MathCommon;
 
 namespace Wjybxx.Commons.Collections;
 

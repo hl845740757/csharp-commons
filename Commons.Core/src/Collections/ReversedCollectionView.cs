@@ -60,7 +60,7 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
     #region add
 
     public virtual void Add(TKey item) {
-        _delegated.Add(item); // add默认不修改方向，但允许重写
+        _delegated.Add(item); // 允许重写
     }
 
     public void AddFirst(TKey item) {
@@ -76,7 +76,7 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
     #region remove
 
     public bool Remove(TKey item) {
-        return _delegated.Remove(item); // 不颠倒顺序
+        return _delegated.Remove(item);
     }
 
     public TKey RemoveFirst() {

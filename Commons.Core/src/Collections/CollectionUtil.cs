@@ -37,7 +37,7 @@ public static class CollectionUtil
         return result;
     }
 
-    public static bool ContainsRef<TE>(TE[] list, TE element) where TE : class {
+    public static bool ContainsRef<T>(T[] list, T element) where T : class {
         for (int i = 0, size = list.Length; i < size; i++) {
             if (ReferenceEquals(list[i], element)) {
                 return true;
@@ -46,7 +46,7 @@ public static class CollectionUtil
         return false;
     }
 
-    public static int IndexOfRef<TE>(TE[] list, Object element) where TE : class {
+    public static int IndexOfRef<T>(T[] list, Object element) where T : class {
         for (int idx = 0, size = list.Length; idx < size; idx++) {
             if (ReferenceEquals(list[idx], element)) {
                 return idx;
@@ -55,7 +55,7 @@ public static class CollectionUtil
         return -1;
     }
 
-    public static int LastIndexOfRef<TE>(TE[] list, Object element) where TE : class {
+    public static int LastIndexOfRef<T>(T[] list, Object element) where T : class {
         for (int idx = list.Length - 1; idx >= 0; idx--) {
             if (ReferenceEquals(list[idx], element)) {
                 return idx;
@@ -68,7 +68,32 @@ public static class CollectionUtil
 
     #region list
 
-    public static bool ContainsRef<TE>(IList<TE> list, TE element) where TE : class {
+    public static List<T> NewList<T>(T first) {
+        var list = new List<T>(1);
+        list.Add(first);
+        return list;
+    }
+
+    public static List<T> NewList<T>(T first, T second) {
+        var list = new List<T>(2);
+        list.Add(first);
+        list.Add(second);
+        return list;
+    }
+
+    public static List<T> NewList<T>(T first, T second, T third) {
+        var list = new List<T>(3);
+        list.Add(first);
+        list.Add(second);
+        list.Add(third);
+        return list;
+    }
+
+    public static List<T> NewList<T>(params T[] elements) {
+        return new List<T>(elements);
+    }
+
+    public static bool ContainsRef<T>(IList<T> list, T element) where T : class {
         for (int i = 0, size = list.Count; i < size; i++) {
             if (ReferenceEquals(list[i], element)) {
                 return true;
@@ -77,7 +102,7 @@ public static class CollectionUtil
         return false;
     }
 
-    public static int IndexOfRef<TE>(IList<TE> list, Object element) where TE : class {
+    public static int IndexOfRef<T>(IList<T> list, Object element) where T : class {
         for (int idx = 0, size = list.Count; idx < size; idx++) {
             if (ReferenceEquals(list[idx], element)) {
                 return idx;
@@ -86,7 +111,7 @@ public static class CollectionUtil
         return -1;
     }
 
-    public static int LastIndexOfRef<TE>(IList<TE> list, Object element) where TE : class {
+    public static int LastIndexOfRef<T>(IList<T> list, Object element) where T : class {
         for (int idx = list.Count - 1; idx >= 0; idx--) {
             if (ReferenceEquals(list[idx], element)) {
                 return idx;
@@ -95,7 +120,7 @@ public static class CollectionUtil
         return -1;
     }
 
-    public static bool RemoveRef<TE>(IList<TE> list, Object element) where TE : class {
+    public static bool RemoveRef<T>(IList<T> list, Object element) where T : class {
         int index = IndexOfRef(list, element);
         if (index < 0) {
             return false;

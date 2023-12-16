@@ -62,7 +62,7 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     bool ContainsValue(TValue value);
 
     /// <summary>
-    /// 如果key不存在，则插入键值对并发那会true，否则返回false
+    /// 如果key不存在，则插入键值对并返回true，否则返回false
     /// </summary>
     /// <returns>插入成功则返回true</returns>
     bool TryAdd(TKey key, TValue value);
@@ -101,8 +101,10 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
         set => this[key] = value;
     }
 
-    TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] {
-        get => this[key];
+    TValue IReadOnlyDictionary<TKey, TValue>.this[TKey key] => this[key];
+
+    void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) {
+        Add(item.Key, item.Value);
     }
 
     #endregion

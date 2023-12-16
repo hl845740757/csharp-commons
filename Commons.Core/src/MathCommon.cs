@@ -16,13 +16,15 @@
 
 #endregion
 
-namespace Wjybxx.Commons.Collections;
+namespace Wjybxx.Commons;
 
 /// <summary>
 /// 基础数学工具库
 /// </summary>
 public static class MathCommon
 {
+    #region power2
+
     /** 判断一个数是否是2的整次幂 */
     public static bool IsPowerOfTwo(int x) {
         return x > 0 && (x & (x - 1)) == 0;
@@ -57,5 +59,19 @@ public static class MathCommon
         num = (num >> 16) | num;
         num = (num >> 32) | num;
         return ++num;
+    }
+
+    #endregion
+
+    public static float Clamp01(float value) {
+        if (value <= 0f) return 0f;
+        if (value >= 1f) return 1f;
+        return value;
+    }
+
+    public static double Clamp01(double value) {
+        if (value <= 0d) return 0d;
+        if (value >= 1d) return 1d;
+        return value;
     }
 }

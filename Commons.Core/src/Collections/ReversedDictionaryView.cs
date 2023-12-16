@@ -35,7 +35,7 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
 
     public virtual TValue this[TKey key] {
         get => Delegated[key];
-        set => Delegated[key] = value; // 等同add，允许重写
+        set => Delegated[key] = value; // 允许重写
     }
 
     public override ISequencedDictionary<TKey, TValue> Reversed() {
@@ -76,7 +76,7 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
     #region add
 
     public virtual void Add(TKey key, TValue value) {
-        Delegated.Add(key, value); // add默认不修改方向，但允许重写
+        Delegated.Add(key, value); // 允许重写
     }
 
     public virtual bool TryAdd(TKey key, TValue value) {

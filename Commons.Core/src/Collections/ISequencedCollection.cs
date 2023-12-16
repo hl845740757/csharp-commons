@@ -21,9 +21,13 @@ namespace Wjybxx.Commons.Collections;
 public interface ISequencedCollection<T> : IGenericCollection<T>
 {
     /// <summary>
-    /// 返回一个当前集合的逆序视图
-    /// 对逆序视图的AddFirst、AddLast、RemoveFirst、RemoveLast等明确方向的操作将颠倒，
-    /// 而普通的Add、Remove等方法将不受影响（取决于具体实现）。
+    /// 返回一个当前集合的逆序视图。
+    /// 逆序视图的AddFirst、AddLast、RemoveFirst、RemoveLast等明确方向的操作将颠倒，
+    /// 而普通的Add、Remove等方法的操作顺序将是未确定的。
+    ///
+    /// Why? 由于代理类无法准确了解任意序列集合的Add操作的方向，因此无法对其准确反转。
+    /// 所以，如果持有的是反转视图，应避免调用Add这类未明确方向的接口。
+    /// 另外，不建议实现精确反转的代理，这会增强依赖，与其它代码交互时是脆弱的。
     /// </summary>
     /// <returns></returns>
     ISequencedCollection<T> Reversed();
@@ -45,7 +49,7 @@ public interface ISequencedCollection<T> : IGenericCollection<T>
     /// 查看集合的末尾元素
     /// </summary>
     /// <param name="item"></param>
-    /// <returns></returns>
+    /// <returns>如果集合不为空则返回true</returns>
     public bool PeekLast(out T item);
 
     /// <summary>
