@@ -30,7 +30,19 @@ public class ReversedDeque<TKey> : ReversedCollectionView<TKey>, IDeque<TKey>
         return (IDeque<TKey>)_delegated;
     }
 
-    // Queue接口中的方法不能精确反转，允许重写
+    #region dequeue
+
+    public bool TryAddFirst(TKey item) {
+        return Delegated.TryAddLast(item);
+    }
+
+    public bool TryAddLast(TKey item) {
+        return Delegated.TryAddFirst(item);
+    }
+
+    #endregion
+
+    // Queue和Stack接口中的方法不能精确反转，允许重写
 
     #region queue
 
@@ -50,20 +62,32 @@ public class ReversedDeque<TKey> : ReversedCollectionView<TKey>, IDeque<TKey>
         return Delegated.TryDequeue(out item);
     }
 
-    public virtual bool Peek(out TKey item) {
-        return Delegated.Peek(out item);
+    public virtual bool PeekQueue(out TKey item) {
+        return Delegated.PeekQueue(out item);
     }
 
     #endregion
 
-    #region dequeue
+    #region stack
 
-    public bool TryAddFirst(TKey item) {
-        return Delegated.TryAddLast(item);
+    public virtual void Push(TKey item) {
+        Delegated.Push(item);
     }
 
-    public bool TryAddLast(TKey item) {
-        return Delegated.TryAddFirst(item);
+    public virtual bool TryPush(TKey item) {
+        return Delegated.TryPush(item);
+    }
+
+    public virtual TKey Pop() {
+        return Delegated.Pop();
+    }
+
+    public virtual bool TryPop(out TKey item) {
+        return Delegated.TryPop(out item);
+    }
+
+    public virtual bool PeekStack(out TKey item) {
+        return Delegated.PeekStack(out item);
     }
 
     #endregion

@@ -102,7 +102,7 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
         return true;
     }
 
-    public bool Peek(out T item) {
+    public bool PeekQueue(out T item) {
         if (_count == 0) {
             item = default!;
             return false;
@@ -157,7 +157,7 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
         }
         if (delta < 0) {
             // 避免不必要的收缩
-            if (Math.Abs(delta) >= 8) {
+            if (-delta >= 8) {
                 Resize(expectedCount);
             }
         }
@@ -277,11 +277,11 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
     {
         private readonly IndexedPriorityQueue<T> _queue;
         private int _index = -1;
-        private T _current;
+        private T? _current;
 
         public Itr(IndexedPriorityQueue<T> queue) {
             _queue = queue;
-            _current = default!;
+            _current = null;
         }
 
         public bool MoveNext() {

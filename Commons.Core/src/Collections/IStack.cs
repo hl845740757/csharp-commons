@@ -19,50 +19,42 @@
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 队列
+/// 栈结构
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public interface IQueue<T> : IGenericCollection<T>
+public interface IStack<T> : IGenericCollection<T>
 {
     /// <summary>
-    /// 将元素压入队列
+    /// 将一个元素入栈
     /// </summary>
     /// <param name="item"></param>
-    void Enqueue(T item);
+    void Push(T item);
 
     /// <summary>
-    /// 尝试将元素压入队列
+    /// 尝试将元素入栈
     /// </summary>
     /// <param name="item"></param>
-    /// <returns>压入成功则返回true</returns>
-    bool TryEnqueue(T item);
+    /// <returns></returns>
+    bool TryPush(T item);
 
     /// <summary>
-    /// 弹出队首元素
+    /// 弹出栈顶元素
     /// </summary>
     /// <returns></returns>
-    T Dequeue();
+    T Pop();
 
     /// <summary>
-    /// 尝试弹出队首元素
+    /// 尝试弹出栈顶元素
     /// </summary>
     /// <param name="item"></param>
-    /// <returns>队列不为空则返回true</returns>
-    bool TryDequeue(out T item);
+    /// <returns></returns>
+    bool TryPop(out T item);
 
     /// <summary>
-    /// 查看队首元素
+    /// 查看栈顶元素
     /// (调整命名以免接口之间冲突)
     /// </summary>
     /// <param name="item"></param>
-    /// <returns>队列不为空则返回true</returns>
-    bool PeekQueue(out T item);
-
-    #region 接口适配
-
-    void ICollection<T>.Add(T item) {
-        Enqueue(item);
-    }
-
-    #endregion
+    /// <returns></returns>
+    bool PeekStack(out T item);
 }

@@ -80,19 +80,19 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
     }
 
     public virtual bool TryAdd(TKey key, TValue value) {
-        return Delegated.TryAdd(key, value);
+        return Delegated.TryAdd(key, value); // 允许重写
     }
 
     public void AddFirst(TKey key, TValue value) {
         Delegated.AddLast(key, value);
     }
 
-    public bool TryAddFirst(TKey key, TValue value) {
-        return Delegated.TryAddLast(key, value);
-    }
-
     public void AddLast(TKey key, TValue value) {
         Delegated.AddFirst(key, value);
+    }
+
+    public bool TryAddFirst(TKey key, TValue value) {
+        return Delegated.TryAddLast(key, value);
     }
 
     public bool TryAddLast(TKey key, TValue value) {
@@ -108,7 +108,7 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
     }
 
     public virtual PutResult<TValue> Put(TKey key, TValue value) {
-        return Delegated.Put(key, value); // put默认不修改方向，但允许重写
+        return Delegated.Put(key, value); // 允许重写
     }
 
     #endregion

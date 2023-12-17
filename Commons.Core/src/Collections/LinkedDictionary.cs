@@ -730,6 +730,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                 Insert(pos, hash, key, value, InsertionOrder.Default);
                 break;
         }
+        // 其实这里可以将默认值返回给用户，但会增加开销
         return PutResult<TValue>.Insert;
     }
 

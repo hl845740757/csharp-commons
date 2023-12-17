@@ -20,10 +20,11 @@ namespace Wjybxx.Commons.Collections;
 
 /// <summary>
 /// 双端队列
-/// 是否支持null元素，取决于实现
+/// 1.是否支持null元素，取决于实现
+/// 2.接口中不再增加特殊含义的方法名，以免方法数过多导致混淆。
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public interface IDeque<T> : IQueue<T>, ISequencedCollection<T>
+public interface IDeque<T> : IQueue<T>, IStack<T>, ISequencedCollection<T>
 {
     /// <summary>
     /// 与<see cref="ISequencedCollection{T}"/>接口中提到的约束相同，
@@ -32,6 +33,8 @@ public interface IDeque<T> : IQueue<T>, ISequencedCollection<T>
     /// </summary>
     /// <returns></returns>
     new IDeque<T> Reversed();
+
+    #region queue
 
     /// <summary>
     /// 尝试添加元素到队首
@@ -47,7 +50,13 @@ public interface IDeque<T> : IQueue<T>, ISequencedCollection<T>
     /// <returns>插入成功则返回true，否则返回false</returns>
     bool TryAddLast(T item);
 
+    #endregion
+
+    #region 接口适配
+
     ISequencedCollection<T> ISequencedCollection<T>.Reversed() {
         return Reversed();
     }
+
+    #endregion
 }

@@ -39,17 +39,17 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
 
     #region get
 
+    public TKey First => _delegated.Last;
+
+    public TKey Last => _delegated.First;
+
     public bool PeekFirst(out TKey item) {
         return _delegated.PeekLast(out item);
     }
 
-    public TKey First => _delegated.Last;
-
     public bool PeekLast(out TKey item) {
         return _delegated.PeekFirst(out item);
     }
-
-    public TKey Last => _delegated.First;
 
     public bool Contains(TKey item) {
         return _delegated.Contains(item);
@@ -83,12 +83,12 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
         return _delegated.RemoveLast();
     }
 
-    public bool TryRemoveFirst(out TKey item) {
-        return _delegated.TryRemoveLast(out item);
-    }
-
     public TKey RemoveLast() {
         return _delegated.RemoveFirst();
+    }
+
+    public bool TryRemoveFirst(out TKey item) {
+        return _delegated.TryRemoveLast(out item);
     }
 
     public bool TryRemoveLast(out TKey item) {
