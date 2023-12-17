@@ -19,13 +19,15 @@
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 在元素身上存储了索引信息的集合。
-/// 1.这类集合禁止重复添加元素，且使用引用相等判断重复
-/// 2.更多用于非连续存储的集合。
+/// 在Item上存储了索引的优先级队列
+/// (主要提高删除效率)
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public interface IIndexedCollection<T> : IGenericCollection<T> where T : class, IIndexedElement
+public interface IIndexedPriorityQueue<T> : IIndexedCollection<T>, IQueue<T> where T : class, IIndexedElement
 {
-    /** 清空集合中的元素，并且不清理元素上的索引 */
-    void ClearIgnoringIndexes();
+    /// <summary>
+    /// 队列中元素的优先级发生了变更，通知队列调整结构
+    /// </summary>
+    /// <param name="item"></param>
+    void PriorityChanged(T item);
 }
