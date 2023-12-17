@@ -1202,7 +1202,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
         protected abstract T CurrentOfNode(Node node);
 
-        public bool Remove() {
+        public void Remove() {
             if (_version != _dictionary._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
@@ -1212,7 +1212,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             _dictionary.RemoveNode(_currNode);
             _currNode = null;
             _version = _dictionary._version;
-            return true;
         }
 
         public void Reset() {
@@ -1232,7 +1231,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private class PairIterator : AbstractIterator<KeyValuePair<TKey, TValue>>, IRemovableIterator<KeyValuePair<TKey, TValue>>
+    private class PairIterator : AbstractIterator<KeyValuePair<TKey, TValue>>, IUnsafeIterator<KeyValuePair<TKey, TValue>>
     {
         public PairIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) : base(dictionary, reversed) {
         }
@@ -1262,7 +1261,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
     }
 
-    private class UnsafeKeyIterator : AbstractIterator<TKey>, IRemovableIterator<TKey>
+    private class UnsafeKeyIterator : AbstractIterator<TKey>, IUnsafeIterator<TKey>
     {
         public UnsafeKeyIterator(LinkedDictionary<TKey, TValue> dictionary, bool reversed) : base(dictionary, reversed) {
         }

@@ -186,10 +186,10 @@ public static class CollectionUtil
         if (self == null) throw new ArgumentNullException(nameof(self));
         if (retainItems == null) throw new ArgumentNullException(nameof(retainItems));
         IEnumerator<T> itr = self.GetEnumerator();
-        if (itr is IRemovableIterator<T> betterItr) {
-            while (betterItr.MoveNext()) {
-                if (!retainItems.Contains(betterItr.Current)) {
-                    betterItr.Remove();
+        if (itr is IUnsafeIterator<T> unsafeItr) {
+            while (unsafeItr.MoveNext()) {
+                if (!retainItems.Contains(unsafeItr.Current)) {
+                    unsafeItr.Remove();
                 }
             }
         }

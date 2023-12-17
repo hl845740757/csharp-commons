@@ -677,7 +677,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     #region view
 
-    private class SetIterator : IRemovableIterator<TKey>
+    private class SetIterator : IUnsafeIterator<TKey>
     {
         private readonly LinkedHashSet<TKey> _hashSet;
         private readonly bool _reversed;
@@ -711,7 +711,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             return true;
         }
 
-        public bool Remove() {
+        public void Remove() {
             if (_version != _hashSet._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
@@ -721,7 +721,6 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             _hashSet.RemoveNode(_currNode);
             _currNode = null;
             _version = _hashSet._version;
-            return true;
         }
 
         public void Reset() {
