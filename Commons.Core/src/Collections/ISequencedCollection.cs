@@ -31,33 +31,33 @@ public interface ISequencedCollection<T> : IGenericCollection<T>
     /// </summary>
     /// <returns></returns>
     ISequencedCollection<T> Reversed();
+    
+    /// <summary>
+    /// 获取集合首部元素
+    /// </summary>
+    /// <exception cref="InvalidOperationException">如果集合为空</exception>
+    T First { get; }
+
+    /// <summary>
+    /// 获取集合尾部元素
+    /// </summary>
+    /// <exception cref="InvalidOperationException">如果集合为空</exception>
+    T Last { get; }
 
     /// <summary>
     /// 查看集合的首个元素
     /// </summary>
     /// <param name="item"></param>
     /// <returns>如果集合不为空则返回true</returns>
-    public bool PeekFirst(out T item);
-
-    /// <summary>
-    /// 获取集合首部元素
-    /// </summary>
-    /// <exception cref="InvalidOperationException">如果集合为空</exception>
-    public T First { get; }
+    bool PeekFirst(out T item);
 
     /// <summary>
     /// 查看集合的末尾元素
     /// </summary>
     /// <param name="item"></param>
     /// <returns>如果集合不为空则返回true</returns>
-    public bool PeekLast(out T item);
-
-    /// <summary>
-    /// 获取集合尾部元素
-    /// </summary>
-    /// <exception cref="InvalidOperationException">如果集合为空</exception>
-    public T Last { get; }
-
+    bool PeekLast(out T item);
+    
     /// <summary>
     /// 添加元素到集合的首部
     /// </summary>

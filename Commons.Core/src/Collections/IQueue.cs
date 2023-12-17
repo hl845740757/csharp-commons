@@ -20,6 +20,7 @@ namespace Wjybxx.Commons.Collections;
 
 /// <summary>
 /// 队列
+/// 注意：队列的所有操作都是隐含顺序的，包括Add方法，因此Reverse是可以反转的。
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public interface IQueue<T> : IGenericCollection<T>
@@ -52,11 +53,11 @@ public interface IQueue<T> : IGenericCollection<T>
 
     /// <summary>
     /// 查看队首元素
-    /// (调整命名以免接口之间冲突)
+    /// (调整命名以避免接口之间冲突)
     /// </summary>
     /// <param name="item"></param>
     /// <returns>队列不为空则返回true</returns>
-    bool PeekQueue(out T item);
+    bool PeekHead(out T item);
 
     #region 接口适配
 

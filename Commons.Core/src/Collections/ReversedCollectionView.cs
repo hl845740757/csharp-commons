@@ -60,7 +60,7 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
     #region add
 
     public virtual void Add(TKey item) {
-        _delegated.Add(item); // 允许重写
+        _delegated.Add(item); // 允许重写-部分集合的Add是隐含方向的
     }
 
     public void AddFirst(TKey item) {

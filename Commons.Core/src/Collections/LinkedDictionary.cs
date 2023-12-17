@@ -30,12 +30,6 @@ namespace Wjybxx.Commons.Collections;
 /// 2.算法参考自FastUtil的LinkedOpenHashMap。
 /// 3.支持null作为key。
 /// 4.非线程安全。
-///
-/// 测试数据(在GetNode方法中记录线性探测次数)：
-/// 1. 1W个int类型key，hash冲突后线性探测的平均值小于1 (总次数4000~5000)
-/// 2. 10W个int类型key，hash冲突后线性探测的平均值小于1 (总次数11000~12000)
-/// 3. 1W个string类型key，长度24，hash冲突后线性探测的平均值小于1 (总次数4000~5000)(与int相似，且调整长度几无变化)
-/// 4. 10W个string类型key，长度24，hash冲突后线性探测的平均值小于1 (总次数11000~12000)(与int相似，且调整长度几无变化)
 /// 
 /// 吐槽：
 /// 1.C#的基础库里居然没有保持插入序的高性能字典，这对于编写底层工具的开发者来说太不方便了。
@@ -344,10 +338,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     public KeyValuePair<TKey, TValue> RemoveFirst() {
-        if (TryRemoveFirst(out KeyValuePair<TKey, TValue> r)) {
-            return r;
+        if (_count == 0) {
+            throw CollectionEmptyException();
         }
-        throw CollectionEmptyException();
+        TryRemoveFirst(out KeyValuePair<TKey, TValue> r);
+        return r;
     }
 
     public bool TryRemoveFirst(out KeyValuePair<TKey, TValue> pair) {
@@ -367,10 +362,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     public KeyValuePair<TKey, TValue> RemoveLast() {
-        if (TryRemoveLast(out KeyValuePair<TKey, TValue> r)) {
-            return r;
+        if (_count == 0) {
+            throw CollectionEmptyException();
         }
-        throw CollectionEmptyException();
+        TryRemoveLast(out KeyValuePair<TKey, TValue> r);
+        return r;
     }
 
     public bool TryRemoveLast(out KeyValuePair<TKey, TValue> pair) {
@@ -926,7 +922,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     private static InvalidOperationException CollectionEmptyException() {
-        return new InvalidOperationException("Dictionary is Empty");
+        return new InvalidOperationException("Collection is Empty");
     }
 
     private static KeyNotFoundException KeyNotFoundException(TKey key) {

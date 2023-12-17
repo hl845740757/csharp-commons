@@ -35,13 +35,13 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     new ISequencedCollection<TKey> Keys { get; }
     new ISequencedCollection<TValue> Values { get; }
 
-    public TKey FirstKey { get; }
+    TKey FirstKey { get; }
 
-    public TKey LastKey { get; }
+    TKey LastKey { get; }
 
-    public bool PeekFirstKey(out TKey key);
+    bool PeekFirstKey(out TKey key);
 
-    public bool PeekLastKey(out TKey key);
+    bool PeekLastKey(out TKey key);
 
     #endregion
 
@@ -53,13 +53,13 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <exception cref="InvalidOperationException">如果key已经存在</exception>
-    public void AddFirst(TKey key, TValue value);
+    void AddFirst(TKey key, TValue value);
 
     /// <summary>
     /// 如果key不存在则添加成功并返回true，否则返回false
     /// </summary>
     /// <returns>是否添加成功</returns>
-    public bool TryAddFirst(TKey key, TValue value);
+    bool TryAddFirst(TKey key, TValue value);
 
     /// <summary>
     /// 添加键值对到字典的尾部。
@@ -67,13 +67,13 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// </summary>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">如果key已经存在</exception>
-    public void AddLast(TKey key, TValue value);
+    void AddLast(TKey key, TValue value);
 
     /// <summary>
     /// 如果key不存在则添加成功并返回true，否则返回false。
     /// </summary>
     /// <returns>是否添加成功</returns>
-    public bool TryAddLast(TKey key, TValue value);
+    bool TryAddLast(TKey key, TValue value);
 
     /// <summary>
     /// 如果key存在则覆盖，并移动到首部；如果key不存在，则插入到首部
@@ -81,7 +81,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public PutResult<TValue> PutFirst(TKey key, TValue value);
+    PutResult<TValue> PutFirst(TKey key, TValue value);
 
     /// <summary>
     /// 如果key存在则覆盖，并移动到末尾；如果key不存在，则插入到末尾
@@ -89,7 +89,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public PutResult<TValue> PutLast(TKey key, TValue value);
+    PutResult<TValue> PutLast(TKey key, TValue value);
 
     #endregion
 

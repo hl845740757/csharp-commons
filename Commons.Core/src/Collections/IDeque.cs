@@ -27,9 +27,7 @@ namespace Wjybxx.Commons.Collections;
 public interface IDeque<T> : IQueue<T>, IStack<T>, ISequencedCollection<T>
 {
     /// <summary>
-    /// 与<see cref="ISequencedCollection{T}"/>接口中提到的约束相同，
-    /// 只有明确方法的操作会被明确反转，而不确定方向的操作其方向是不确定的。
-    /// 也就是说：<see cref="IQueue{T}"/>接口的中方法在反转后是不确定的，应避免调用。
+    /// 注意：Queue和栈的操作都是隐含方向的，因此相关操作会被反转。
     /// </summary>
     /// <returns></returns>
     new IDeque<T> Reversed();

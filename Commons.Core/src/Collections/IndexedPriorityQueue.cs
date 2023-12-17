@@ -102,7 +102,7 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
         return true;
     }
 
-    public bool PeekQueue(out T item) {
+    public bool PeekHead(out T item) {
         if (_count == 0) {
             item = default!;
             return false;

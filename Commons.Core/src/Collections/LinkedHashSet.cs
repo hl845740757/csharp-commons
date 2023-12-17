@@ -28,7 +28,6 @@ namespace Wjybxx.Commons.Collections;
 /// 保持插入序的Set
 /// 1.由<see cref="LinkedDictionary{TKey,TValue}"/>修改而来，保留起特性。
 /// 2.使用拷贝而不是封装的方式，以减少使用开销。
-/// 
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 [Serializable]
@@ -183,10 +182,11 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     }
 
     public TKey RemoveFirst() {
-        if (TryRemoveFirst(out TKey r)) {
-            return r;
+        if (_count == 0) {
+            throw CollectionEmptyException();
         }
-        throw CollectionEmptyException();
+        TryRemoveFirst(out TKey r);
+        return r;
     }
 
     public bool TryRemoveFirst(out TKey key) {
@@ -206,10 +206,11 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     }
 
     public TKey RemoveLast() {
-        if (TryRemoveLast(out TKey r)) {
-            return r;
+        if (_count == 0) {
+            throw CollectionEmptyException();
         }
-        throw CollectionEmptyException();
+        TryRemoveLast(out TKey r);
+        return r;
     }
 
     public bool TryRemoveLast(out TKey key) {
@@ -666,7 +667,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     }
 
     private static InvalidOperationException CollectionEmptyException() {
-        return new InvalidOperationException("Dictionary is Empty");
+        return new InvalidOperationException("Collection is Empty");
     }
 
     private static KeyNotFoundException KeyNotFoundException(TKey key) {

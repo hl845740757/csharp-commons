@@ -20,6 +20,7 @@ namespace Wjybxx.Commons.Collections;
 
 /// <summary>
 /// 栈结构
+/// 注意：Add方法在Stack这里语义是不清楚的，应当避免使用；将Add强制约定为栈顶不是很合适，多数情况下Add都是期望插到尾部。
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public interface IStack<T> : IGenericCollection<T>
@@ -52,9 +53,9 @@ public interface IStack<T> : IGenericCollection<T>
 
     /// <summary>
     /// 查看栈顶元素
-    /// (调整命名以免接口之间冲突)
+    /// (调整命名以避免接口之间冲突)
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    bool PeekStack(out T item);
+    bool PeekTop(out T item);
 }
