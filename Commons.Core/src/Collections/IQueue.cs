@@ -55,9 +55,16 @@ public interface IQueue<T> : IGenericCollection<T>
     /// 查看队首元素
     /// (调整命名以避免接口之间冲突)
     /// </summary>
+    /// <exception cref="InvalidOperationException">如果队列为空</exception>
+    /// <returns></returns>
+    T PeekHead();
+
+    /// <summary>
+    /// 查看队首元素
+    /// </summary>
     /// <param name="item"></param>
     /// <returns>队列不为空则返回true</returns>
-    bool PeekHead(out T item);
+    bool TryPeekHead(out T item);
 
     #region 接口适配
 

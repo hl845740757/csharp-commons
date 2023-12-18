@@ -87,14 +87,12 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     #region peek
 
-    public TKey First {
-        get {
-            if (_head == null) throw CollectionEmptyException();
-            return _head._key;
-        }
+    public TKey PeekFirst() {
+        if (_head == null) throw CollectionEmptyException();
+        return _head._key;
     }
 
-    public bool PeekFirst(out TKey key) {
+    public bool TryPeekFirst(out TKey key) {
         if (_head == null) {
             key = default;
             return false;
@@ -103,14 +101,12 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         return true;
     }
 
-    public TKey Last {
-        get {
-            if (_tail == null) throw CollectionEmptyException();
-            return _tail._key;
-        }
+    public TKey PeekLast() {
+        if (_tail == null) throw CollectionEmptyException();
+        return _tail._key;
     }
 
-    public bool PeekLast(out TKey key) {
+    public bool TryPeekLast(out TKey key) {
         if (_tail == null) {
             key = default;
             return false;

@@ -102,7 +102,14 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
         return true;
     }
 
-    public bool PeekHead(out T item) {
+    public T PeekHead() {
+        if (_count == 0) {
+            throw new InvalidOperationException("Collection is empty");
+        }
+        return _items[0];
+    }
+
+    public bool TryPeekHead(out T item) {
         if (_count == 0) {
             item = default!;
             return false;

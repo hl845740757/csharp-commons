@@ -63,16 +63,14 @@ public class MultiChunkDeque<T> : IDeque<T>
 
     #region get/contains
 
-    public T First {
-        get {
-            if (_headChunk == null) {
-                throw CollectionEmptyException();
-            }
-            return _headChunk.First;
+    public T PeekFirst() {
+        if (_headChunk == null) {
+            throw CollectionEmptyException();
         }
+        return _headChunk.First;
     }
 
-    public bool PeekFirst(out T item) {
+    public bool TryPeekFirst(out T item) {
         if (_headChunk == null) {
             item = default;
             return false;
@@ -81,16 +79,14 @@ public class MultiChunkDeque<T> : IDeque<T>
         return true;
     }
 
-    public T Last {
-        get {
-            if (_tailChunk == null) {
-                throw CollectionEmptyException();
-            }
-            return _tailChunk.Last;
+    public T PeekLast() {
+        if (_tailChunk == null) {
+            throw CollectionEmptyException();
         }
+        return _tailChunk.Last;
     }
 
-    public bool PeekLast(out T item) {
+    public bool TryPeekLast(out T item) {
         if (_tailChunk == null) {
             item = default;
             return false;
@@ -208,8 +204,12 @@ public class MultiChunkDeque<T> : IDeque<T>
         return TryRemoveFirst(out item);
     }
 
-    public bool PeekHead(out T item) {
-        return PeekFirst(out item);
+    public T PeekHead() {
+        return PeekFirst();
+    }
+
+    public bool TryPeekHead(out T item) {
+        return TryPeekFirst(out item);
     }
 
     #endregion
@@ -232,8 +232,12 @@ public class MultiChunkDeque<T> : IDeque<T>
         return TryRemoveFirst(out item);
     }
 
-    public bool PeekTop(out T item) {
-        return PeekFirst(out item);
+    public T PeekTop() {
+        return PeekFirst();
+    }
+
+    public bool TryPeekTop(out T item) {
+        return TryPeekFirst(out item);
     }
 
     #endregion
@@ -304,7 +308,7 @@ public class MultiChunkDeque<T> : IDeque<T>
 
     #endregion
 
-    /** 每一个chunk其实是一个小双端队列 */
+    /** 每一个Chunk是一个有界环形队列 */
     private class Chunk
     {
         internal T[] _elements;

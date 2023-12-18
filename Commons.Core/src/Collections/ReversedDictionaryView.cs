@@ -44,15 +44,15 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
 
     #region get
 
-    public TKey FirstKey => Delegated.LastKey;
-    public TKey LastKey => Delegated.FirstKey;
+    public TKey PeekFirstKey() => Delegated.PeekLastKey();
+    public TKey PeekLastKey() => Delegated.PeekFirstKey();
 
-    public bool PeekFirstKey(out TKey key) {
-        return Delegated.PeekLastKey(out key);
+    public bool TryPeekFirstKey(out TKey key) {
+        return Delegated.TryPeekLastKey(out key);
     }
 
-    public bool PeekLastKey(out TKey key) {
-        return Delegated.PeekFirstKey(out key);
+    public bool TryPeekLastKey(out TKey key) {
+        return Delegated.TryPeekFirstKey(out key);
     }
 
     public bool TryGetValue(TKey key, out TValue value) {

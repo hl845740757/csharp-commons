@@ -16,8 +16,8 @@ LinkedDictionary特殊接口示例：
 ```csharp
 
     public class LinkedDictionary<TKey,TValue> {
-        TKey FirstKey { get; }
-        TKey LastKey { get; }
+        TKey PeekFirstKey();
+        TKey PeekLastKey();
         void AddFirst(TKey key, TValue value);
         void AddLast(TKey key, TValue value);
         KeyValuePair<TKey, TValue> RemoveFirst();

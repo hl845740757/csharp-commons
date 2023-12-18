@@ -157,6 +157,6 @@ public class LinkedDictionaryTest
         Assert.That(nextKey, Is.EqualTo("key2"));
 
         dictionary.Remove(null);
-        Assert.That(dictionary.FirstKey, Is.EqualTo("key1"));
+        Assert.That(dictionary.PeekFirstKey(), Is.EqualTo("key1"));
     }
 }

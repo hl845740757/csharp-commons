@@ -39,16 +39,16 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
 
     #region get
 
-    public TKey First => _delegated.Last;
+    public TKey PeekFirst() => _delegated.PeekLast();
 
-    public TKey Last => _delegated.First;
+    public TKey PeekLast() => _delegated.PeekFirst();
 
-    public bool PeekFirst(out TKey item) {
-        return _delegated.PeekLast(out item);
+    public bool TryPeekFirst(out TKey item) {
+        return _delegated.TryPeekLast(out item);
     }
 
-    public bool PeekLast(out TKey item) {
-        return _delegated.PeekFirst(out item);
+    public bool TryPeekLast(out TKey item) {
+        return _delegated.TryPeekFirst(out item);
     }
 
     public bool Contains(TKey item) {

@@ -71,8 +71,12 @@ public class ReversedDequeView<TKey> : ReversedCollectionView<TKey>, IDeque<TKey
         return Delegated.TryRemoveLast(out item);
     }
 
-    public bool PeekHead(out TKey item) {
-        return Delegated.PeekLast(out item);
+    public TKey PeekHead() {
+        return Delegated.PeekLast();
+    }
+
+    public bool TryPeekHead(out TKey item) {
+        return Delegated.TryPeekLast(out item);
     }
 
     #endregion
@@ -95,8 +99,12 @@ public class ReversedDequeView<TKey> : ReversedCollectionView<TKey>, IDeque<TKey
         return Delegated.TryRemoveLast(out item);
     }
 
-    public bool PeekTop(out TKey item) {
-        return Delegated.PeekLast(out item);
+    public TKey PeekTop() {
+        return Delegated.PeekLast();
+    }
+
+    public bool TryPeekTop(out TKey item) {
+        return Delegated.TryPeekLast(out item);
     }
 
     #endregion

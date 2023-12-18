@@ -55,7 +55,14 @@ public interface IStack<T> : IGenericCollection<T>
     /// 查看栈顶元素
     /// (调整命名以避免接口之间冲突)
     /// </summary>
+    /// <exception cref="InvalidOperationException">如果队列为空</exception>
+    /// <returns></returns>
+    T PeekTop();
+
+    /// <summary>
+    /// 查看栈顶元素
+    /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    bool PeekTop(out T item);
+    bool TryPeekTop(out T item);
 }

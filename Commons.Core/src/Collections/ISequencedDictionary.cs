@@ -35,13 +35,13 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     new ISequencedCollection<TKey> Keys { get; }
     new ISequencedCollection<TValue> Values { get; }
 
-    TKey FirstKey { get; }
+    TKey PeekFirstKey();
 
-    TKey LastKey { get; }
+    TKey PeekLastKey();
 
-    bool PeekFirstKey(out TKey key);
+    bool TryPeekFirstKey(out TKey key);
 
-    bool PeekLastKey(out TKey key);
+    bool TryPeekLastKey(out TKey key);
 
     #endregion
 

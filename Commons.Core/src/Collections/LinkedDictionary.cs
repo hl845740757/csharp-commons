@@ -144,7 +144,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #region peek
 
-    public bool PeekFirst(out KeyValuePair<TKey, TValue> pair) {
+    public bool TryPeekFirst(out KeyValuePair<TKey, TValue> pair) {
         if (_head != null) {
             pair = _head.AsPair();
             return true;
@@ -153,14 +153,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return false;
     }
 
-    public KeyValuePair<TKey, TValue> First {
-        get {
-            if (_head == null) throw CollectionEmptyException();
-            return _head.AsPair();
-        }
+    public KeyValuePair<TKey, TValue> PeekFirst() {
+        if (_head == null) throw CollectionEmptyException();
+        return _head.AsPair();
     }
 
-    public bool PeekLast(out KeyValuePair<TKey, TValue> pair) {
+    public bool TryPeekLast(out KeyValuePair<TKey, TValue> pair) {
         if (_tail != null) {
             pair = _tail.AsPair();
             return true;
@@ -169,21 +167,17 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return false;
     }
 
-    public KeyValuePair<TKey, TValue> Last {
-        get {
-            if (_tail == null) throw CollectionEmptyException();
-            return _tail.AsPair();
-        }
+    public KeyValuePair<TKey, TValue> PeekLast() {
+        if (_tail == null) throw CollectionEmptyException();
+        return _tail.AsPair();
     }
 
-    public TKey FirstKey {
-        get {
-            if (_head == null) throw CollectionEmptyException();
-            return _head._key;
-        }
+    public TKey PeekFirstKey() {
+        if (_head == null) throw CollectionEmptyException();
+        return _head._key;
     }
 
-    public bool PeekFirstKey(out TKey key) {
+    public bool TryPeekFirstKey(out TKey key) {
         if (_head == null) {
             key = default;
             return false;
@@ -192,14 +186,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return true;
     }
 
-    public TKey LastKey {
-        get {
-            if (_tail == null) throw CollectionEmptyException();
-            return _tail._key;
-        }
+    public TKey PeekLastKey() {
+        if (_tail == null) throw CollectionEmptyException();
+        return _tail._key;
     }
 
-    public bool PeekLastKey(out TKey key) {
+    public bool TryPeekLastKey(out TKey key) {
         if (_tail == null) {
             key = default;
             return false;
@@ -950,13 +942,13 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
         public abstract bool Contains(T item);
 
-        public abstract bool PeekFirst(out T item);
+        public abstract bool TryPeekFirst(out T item);
 
-        public abstract T First { get; }
+        public abstract T PeekFirst();
 
-        public abstract bool PeekLast(out T item);
+        public abstract bool TryPeekLast(out T item);
 
-        public abstract T Last { get; }
+        public abstract T PeekLast();
 
         #endregion
 
@@ -1023,15 +1015,15 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             : base(dictionary, reversed) {
         }
 
-        public override TKey First => _reversed ? _dictionary.LastKey : _dictionary.FirstKey;
-        public override TKey Last => _reversed ? _dictionary.FirstKey : _dictionary.LastKey;
+        public override TKey PeekFirst() => _reversed ? _dictionary.PeekLastKey() : _dictionary.PeekFirstKey();
+        public override TKey PeekLast() => _reversed ? _dictionary.PeekFirstKey() : _dictionary.PeekLastKey();
 
-        public override bool PeekFirst(out TKey item) {
-            return _reversed ? _dictionary.PeekLastKey(out item) : _dictionary.PeekFirstKey(out item);
+        public override bool TryPeekFirst(out TKey item) {
+            return _reversed ? _dictionary.TryPeekLastKey(out item) : _dictionary.TryPeekFirstKey(out item);
         }
 
-        public override bool PeekLast(out TKey item) {
-            return _reversed ? _dictionary.PeekFirstKey(out item) : _dictionary.PeekLastKey(out item);
+        public override bool TryPeekLast(out TKey item) {
+            return _reversed ? _dictionary.TryPeekFirstKey(out item) : _dictionary.TryPeekLastKey(out item);
         }
 
         public override bool Contains(TKey item) {
@@ -1075,14 +1067,14 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return true;
         }
 
-        public override TValue First => _reversed ? CheckNodeValue(_dictionary._tail) : CheckNodeValue(_dictionary._head);
-        public override TValue Last => _reversed ? CheckNodeValue(_dictionary._head) : CheckNodeValue(_dictionary._tail);
+        public override TValue PeekFirst() => _reversed ? CheckNodeValue(_dictionary._tail) : CheckNodeValue(_dictionary._head);
+        public override TValue PeekLast() => _reversed ? CheckNodeValue(_dictionary._head) : CheckNodeValue(_dictionary._tail);
 
-        public override bool PeekFirst(out TValue item) {
+        public override bool TryPeekFirst(out TValue item) {
             return _reversed ? PeekNodeValue(_dictionary._tail, out item) : PeekNodeValue(_dictionary._head, out item);
         }
 
-        public override bool PeekLast(out TValue item) {
+        public override bool TryPeekLast(out TValue item) {
             return _reversed ? PeekNodeValue(_dictionary._head, out item) : PeekNodeValue(_dictionary._tail, out item);
         }
 
