@@ -88,7 +88,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     #region peek
 
     public TKey PeekFirst() {
-        if (_head == null) throw CollectionEmptyException();
+        if (_head == null) throw CollectionUtil.CollectionEmptyException();
         return _head._key;
     }
 
@@ -102,7 +102,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     }
 
     public TKey PeekLast() {
-        if (_tail == null) throw CollectionEmptyException();
+        if (_tail == null) throw CollectionUtil.CollectionEmptyException();
         return _tail._key;
     }
 
@@ -179,7 +179,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     public TKey RemoveFirst() {
         if (_count == 0) {
-            throw CollectionEmptyException();
+            throw CollectionUtil.CollectionEmptyException();
         }
         TryRemoveFirst(out TKey r);
         return r;
@@ -203,7 +203,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     public TKey RemoveLast() {
         if (_count == 0) {
-            throw CollectionEmptyException();
+            throw CollectionUtil.CollectionEmptyException();
         }
         TryRemoveLast(out TKey r);
         return r;
@@ -253,7 +253,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     public bool NextKey(TKey key, out TKey next) {
         var node = GetNode(key);
         if (node == null) {
-            throw KeyNotFoundException(key);
+            throw CollectionUtil.KeyNotFoundException(key);
         }
         if (node._next != null) {
             next = node._next._key;
@@ -273,7 +273,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     public bool PrevKey(TKey key, out TKey prev) {
         var node = GetNode(key);
         if (node == null) {
-            throw KeyNotFoundException(key);
+            throw CollectionUtil.KeyNotFoundException(key);
         }
         if (node._prev != null) {
             prev = node._prev._key;
@@ -660,14 +660,6 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int KeyHash(TKey? key, IEqualityComparer<TKey> keyComparer) {
         return key == null ? 0 : HashCommon.Mix(keyComparer.GetHashCode(key));
-    }
-
-    private static InvalidOperationException CollectionEmptyException() {
-        return new InvalidOperationException("Collection is Empty");
-    }
-
-    private static KeyNotFoundException KeyNotFoundException(TKey key) {
-        return new KeyNotFoundException(key == null ? "null" : key.ToString());
     }
 
     #endregion

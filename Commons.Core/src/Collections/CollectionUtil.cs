@@ -20,6 +20,16 @@ namespace Wjybxx.Commons.Collections;
 
 public static class CollectionUtil
 {
+    public static bool AllowDiscardHead(this DequeOverflowBehavior behavior) {
+        return behavior == DequeOverflowBehavior.CircleBuffer
+               || behavior == DequeOverflowBehavior.DiscardHead;
+    }
+
+    public static bool AllowDiscardTail(this DequeOverflowBehavior behavior) {
+        return behavior == DequeOverflowBehavior.CircleBuffer
+               || behavior == DequeOverflowBehavior.DiscardTail;
+    }
+
     #region 数组
 
     /// <summary>
@@ -269,6 +279,22 @@ public static class CollectionUtil
     public static TValue GetValueOrDefault<TKey, TValue>(this IGenericDictionary<TKey, TValue> self, TKey key, TValue defValue) {
         if (self == null) throw new ArgumentNullException(nameof(self));
         return self.TryGetValue(key, out TValue value) ? value : defValue;
+    }
+
+    #endregion
+
+    #region internal
+
+    internal static InvalidOperationException CollectionFullException() {
+        return new InvalidOperationException("Collection is full");
+    }
+    
+    internal static InvalidOperationException CollectionEmptyException() {
+        return new InvalidOperationException("Collection is Empty");
+    }
+
+    internal static KeyNotFoundException KeyNotFoundException(object? key) {
+        return new KeyNotFoundException(key == null ? "null" : key.ToString());
     }
 
     #endregion

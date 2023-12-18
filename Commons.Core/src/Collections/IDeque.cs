@@ -56,5 +56,61 @@ public interface IDeque<T> : IQueue<T>, IStack<T>, ISequencedCollection<T>
         return Reversed();
     }
 
+    #region queue
+
+    void IQueue<T>.Enqueue(T item) {
+        AddLast(item);
+    }
+
+    bool IQueue<T>.TryEnqueue(T item) {
+        return TryAddLast(item);
+    }
+
+    T IQueue<T>.Dequeue() {
+        return RemoveFirst();
+    }
+
+    bool IQueue<T>.TryDequeue(out T item) {
+        return TryRemoveFirst(out item);
+    }
+
+    T IQueue<T>.PeekHead() {
+        return PeekFirst();
+    }
+
+    bool IQueue<T>.TryPeekHead(out T item) {
+        return TryPeekFirst(out item);
+    }
+
+    #endregion
+
+    #region stack
+
+    void IStack<T>.Push(T item) {
+        AddFirst(item);
+    }
+
+    bool IStack<T>.TryPush(T item) {
+        return TryAddFirst(item);
+    }
+
+    T IStack<T>.Pop() {
+        return RemoveFirst();
+    }
+
+    bool IStack<T>.TryPop(out T item) {
+        return TryRemoveFirst(out item);
+    }
+
+    T IStack<T>.PeekTop() {
+        return PeekFirst();
+    }
+
+    bool IStack<T>.TryPeekTop(out T item) {
+        return TryPeekFirst(out item);
+    }
+
+    #endregion
+
     #endregion
 }

@@ -134,7 +134,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public TValue this[TKey key] {
         get {
             Node? node = GetNode(key);
-            if (node == null) throw KeyNotFoundException(key);
+            if (node == null) throw CollectionUtil.KeyNotFoundException(key);
             return node._value;
         }
         set => TryPut(key, value, PutBehavior.None);
@@ -154,7 +154,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     public KeyValuePair<TKey, TValue> PeekFirst() {
-        if (_head == null) throw CollectionEmptyException();
+        if (_head == null) throw CollectionUtil.CollectionEmptyException();
         return _head.AsPair();
     }
 
@@ -168,12 +168,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     public KeyValuePair<TKey, TValue> PeekLast() {
-        if (_tail == null) throw CollectionEmptyException();
+        if (_tail == null) throw CollectionUtil.CollectionEmptyException();
         return _tail.AsPair();
     }
 
     public TKey PeekFirstKey() {
-        if (_head == null) throw CollectionEmptyException();
+        if (_head == null) throw CollectionUtil.CollectionEmptyException();
         return _head._key;
     }
 
@@ -187,7 +187,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     public TKey PeekLastKey() {
-        if (_tail == null) throw CollectionEmptyException();
+        if (_tail == null) throw CollectionUtil.CollectionEmptyException();
         return _tail._key;
     }
 
@@ -243,7 +243,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         return true;
     }
 
-    public virtual bool TryGetValueOrDefault(TKey key, out TValue value) {
+    public bool TryGetValueOrDefault(TKey key, out TValue value) {
         var node = GetNode(key);
         if (node == null) {
             value = _defValue;
@@ -331,7 +331,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public KeyValuePair<TKey, TValue> RemoveFirst() {
         if (_count == 0) {
-            throw CollectionEmptyException();
+            throw CollectionUtil.CollectionEmptyException();
         }
         TryRemoveFirst(out KeyValuePair<TKey, TValue> r);
         return r;
@@ -355,7 +355,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public KeyValuePair<TKey, TValue> RemoveLast() {
         if (_count == 0) {
-            throw CollectionEmptyException();
+            throw CollectionUtil.CollectionEmptyException();
         }
         TryRemoveLast(out KeyValuePair<TKey, TValue> r);
         return r;
@@ -403,7 +403,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public TValue GetAndMoveToFirst(TKey key) {
         var node = GetNode(key);
         if (node == null) {
-            throw KeyNotFoundException(key);
+            throw CollectionUtil.KeyNotFoundException(key);
         }
         MoveToFirst(node);
         return node._value;
@@ -434,7 +434,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public TValue GetAndMoveToLast(TKey key) {
         var node = GetNode(key);
         if (node == null) {
-            throw KeyNotFoundException(key);
+            throw CollectionUtil.KeyNotFoundException(key);
         }
         MoveToLast(node);
         return node._value;
@@ -463,11 +463,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     /// <param name="key">当前键</param>
     /// <param name="next">接收下一个键</param>
     /// <returns></returns>
-    /// <exception cref="KeyNotFoundException">如果当前键不存在</exception>
+    /// <exception cref="CollectionUtil.KeyNotFoundException">如果当前键不存在</exception>
     public bool NextKey(TKey key, out TKey next) {
         var node = GetNode(key);
         if (node == null) {
-            throw KeyNotFoundException(key);
+            throw CollectionUtil.KeyNotFoundException(key);
         }
         if (node._next != null) {
             next = node._next._key;
@@ -483,11 +483,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     /// <param name="key">当前键</param>
     /// <param name="prev">接收前一个键</param>
     /// <returns></returns>
-    /// <exception cref="KeyNotFoundException">如果当前键不存在</exception>
+    /// <exception cref="CollectionUtil.KeyNotFoundException">如果当前键不存在</exception>
     public bool PrevKey(TKey key, out TKey prev) {
         var node = GetNode(key);
         if (node == null) {
-            throw KeyNotFoundException(key);
+            throw CollectionUtil.KeyNotFoundException(key);
         }
         if (node._prev != null) {
             prev = node._prev._key;
@@ -865,7 +865,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     private void MoveToFirst(Node node) {
-        if (_count == 1 || node == _head) {
+        if (node == _head) {
             return;
         }
         if (node == _tail) {
@@ -884,7 +884,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     }
 
     private void MoveToLast(Node node) {
-        if (_count == 1 || node == _tail) {
+        if (node == _tail) {
             return;
         }
         if (node == _head) {
@@ -911,14 +911,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int KeyHash(TKey? key, IEqualityComparer<TKey> keyComparer) {
         return key == null ? 0 : HashCommon.Mix(keyComparer.GetHashCode(key));
-    }
-
-    private static InvalidOperationException CollectionEmptyException() {
-        return new InvalidOperationException("Collection is Empty");
-    }
-
-    private static KeyNotFoundException KeyNotFoundException(TKey key) {
-        return new KeyNotFoundException(key == null ? "null" : key.ToString());
     }
 
     #endregion
@@ -1054,7 +1046,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         private static TValue CheckNodeValue(Node? node) {
-            if (node == null) throw CollectionEmptyException();
+            if (node == null) throw CollectionUtil.CollectionEmptyException();
             return node._value;
         }
 
