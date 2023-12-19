@@ -32,8 +32,6 @@ public readonly struct PutResult<TValue>
         _prevValue = prevValue;
     }
 
-    public static readonly PutResult<TValue> Insert = new(true, default);
-
     /// <summary>
     /// 本次操作是否是insert操作（即没有旧值）
     /// </summary>
@@ -41,6 +39,7 @@ public readonly struct PutResult<TValue>
 
     /// <summary>
     /// Key关联的旧值
+    /// （Insert下是关联的默认值）
     /// </summary>
     public TValue PrevValue => _prevValue;
 }

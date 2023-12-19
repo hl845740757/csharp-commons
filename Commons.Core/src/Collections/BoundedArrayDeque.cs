@@ -52,7 +52,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     public DequeOverflowBehavior OverflowBehavior => _overflowBehavior;
 
     public bool IsReadOnly => false;
-    public int Count => _head == -1 ? 0 : Distance(_tail, _head, _elements.Length);
+    public int Count => _head == -1 ? 0 : Length(_tail, _head, _elements.Length);
     public bool IsEmpty => _head == -1;
 
     /// <summary>
@@ -64,7 +64,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         get {
             T[] elements = _elements;
             int head = _head;
-            if (index < 0 || head < 0 || index >= Distance(_tail, head, elements.Length)) {
+            if (index < 0 || head < 0 || index >= Length(_tail, head, elements.Length)) {
                 throw new IndexOutOfRangeException($"count {Count}, index {index}");
             }
             return elements[Inc(head, index, elements.Length)];
@@ -72,14 +72,14 @@ public class BoundedArrayDeque<T> : IDeque<T>
         set {
             T[] elements = _elements;
             int head = _head;
-            if (index < 0 || head < 0 || index >= Distance(_tail, head, elements.Length)) {
+            if (index < 0 || head < 0 || index >= Length(_tail, head, elements.Length)) {
                 throw new IndexOutOfRangeException($"count {Count}, index {index}");
             }
             elements[Inc(head, index, elements.Length)] = value;
         }
     }
 
-    private static int Distance(int tail, int head, int modulus) {
+    private static int Length(int tail, int head, int modulus) {
         Debug.Assert(head >= 0);
         if ((tail -= head) < 0) tail += modulus;
         return tail + 1;
@@ -100,22 +100,18 @@ public class BoundedArrayDeque<T> : IDeque<T>
         return i;
     }
 
-    private static InvalidOperationException CollectionEmptyException() {
-        
-    }
-
     #region sequence
 
     public T PeekFirst() {
         if (_head == -1) {
-            throw 
+            throw CollectionUtil.CollectionEmptyException();
         }
         return _elements[_head];
     }
 
     public T PeekLast() {
         if (_head == -1) {
-            throw new InvalidOperationException("Collection is Empty");
+            throw CollectionUtil.CollectionEmptyException();
         }
         return _elements[_tail];
     }
@@ -244,7 +240,6 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     #endregion
-
 
     #region itr
 

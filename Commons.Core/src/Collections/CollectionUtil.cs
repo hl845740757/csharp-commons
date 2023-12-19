@@ -78,31 +78,6 @@ public static class CollectionUtil
 
     #region list
 
-    public static List<T> NewList<T>(T first) {
-        var list = new List<T>(1);
-        list.Add(first);
-        return list;
-    }
-
-    public static List<T> NewList<T>(T first, T second) {
-        var list = new List<T>(2);
-        list.Add(first);
-        list.Add(second);
-        return list;
-    }
-
-    public static List<T> NewList<T>(T first, T second, T third) {
-        var list = new List<T>(3);
-        list.Add(first);
-        list.Add(second);
-        list.Add(third);
-        return list;
-    }
-
-    public static List<T> NewList<T>(params T[] elements) {
-        return new List<T>(elements);
-    }
-
     public static bool ContainsRef<T>(IList<T> list, T element) where T : class {
         for (int i = 0, size = list.Count; i < size; i++) {
             if (ReferenceEquals(list[i], element)) {
@@ -288,7 +263,7 @@ public static class CollectionUtil
     internal static InvalidOperationException CollectionFullException() {
         return new InvalidOperationException("Collection is full");
     }
-    
+
     internal static InvalidOperationException CollectionEmptyException() {
         return new InvalidOperationException("Collection is Empty");
     }
