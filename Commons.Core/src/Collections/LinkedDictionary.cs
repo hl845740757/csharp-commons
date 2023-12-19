@@ -236,16 +236,6 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     public bool TryGetValue(TKey key, out TValue value) {
         var node = GetNode(key);
         if (node == null) {
-            value = default;
-            return false;
-        }
-        value = node._value;
-        return true;
-    }
-
-    public bool TryGetValueOrDefault(TKey key, out TValue value) {
-        var node = GetNode(key);
-        if (node == null) {
             value = _defValue;
             return false;
         }

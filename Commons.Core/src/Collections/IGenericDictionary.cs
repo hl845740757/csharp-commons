@@ -37,22 +37,13 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
     IGenericCollection<TKey> UnsafeKeys();
 
     /// <summary>
-    /// 获取key关联的值，如果关联的值不存在，则返回default分配的对象。
+    /// 获取key关联的值，如果关联的值不存在，则返回预设的默认值。
+    /// 如果字典支持自定义默认值，则返回自定义默认值；否则返回default分配的对象。
     /// </summary>
     /// <param name="key"></param>
     /// <param name="value">接受返回值</param>
     /// <returns>如果key存在则返回true；否则返回false</returns>
     new bool TryGetValue(TKey key, out TValue value);
-
-    /// <summary>
-    /// 获取key关联的值，如果关联的值不存在，则返回预设的默认值。
-    /// 1.如果字典支持 自定义默认值，则返回自定义默认值；否则返回default分配的对象。
-    /// 2.为避免实例被向上转型后可能走到扩展方法，从而导致混淆，因此不命名<code>GetValueOrDefault</code>。
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value">接受返回值</param>
-    /// <returns>如果key存在则返回true；否则返回false</returns>
-    bool TryGetValueOrDefault(TKey key, out TValue value);
 
     /// <summary>
     /// 是否包含给定的Value

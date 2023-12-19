@@ -59,10 +59,6 @@ public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyVa
         return Delegated.TryGetValue(key, out value);
     }
 
-    public bool TryGetValueOrDefault(TKey key, out TValue value) {
-        return Delegated.TryGetValueOrDefault(key, out value);
-    }
-
     public bool ContainsKey(TKey key) {
         return Delegated.ContainsKey(key);
     }
