@@ -16,6 +16,7 @@
 
 #endregion
 
+using System.Collections;
 using System.Diagnostics;
 
 namespace Wjybxx.Commons.Collections;
@@ -34,6 +35,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     /// </summary>
     private int _head;
     private int _tail;
+    private int _version;
 
     /// <summary>
     /// 
@@ -52,8 +54,9 @@ public class BoundedArrayDeque<T> : IDeque<T>
     public DequeOverflowBehavior OverflowBehavior => _overflowBehavior;
 
     public bool IsReadOnly => false;
-    public int Count => _head == -1 ? 0 : Length(_tail, _head, _elements.Length);
-    public bool IsEmpty => _head == -1;
+    public int Count => _head < 0 ? 0 : Length(_tail, _head, _elements.Length);
+    public bool IsEmpty => _head < 0;
+    public bool IsFull => (_tail + 1 == _head) || (_head == 0 && (_tail + 1 == +_elements.Length));
 
     /// <summary>
     /// 读写特定索引下的元素
@@ -103,21 +106,21 @@ public class BoundedArrayDeque<T> : IDeque<T>
     #region sequence
 
     public T PeekFirst() {
-        if (_head == -1) {
+        if (_head < 0) {
             throw CollectionUtil.CollectionEmptyException();
         }
         return _elements[_head];
     }
 
     public T PeekLast() {
-        if (_head == -1) {
+        if (_head < 0) {
             throw CollectionUtil.CollectionEmptyException();
         }
         return _elements[_tail];
     }
 
     public bool TryPeekFirst(out T item) {
-        if (_head == -1) {
+        if (_head < 0) {
             item = default;
             return false;
         }
@@ -126,7 +129,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public bool TryPeekLast(out T item) {
-        if (_head == -1) {
+        if (_head < 0) {
             item = default;
             return false;
         }
@@ -140,47 +143,194 @@ public class BoundedArrayDeque<T> : IDeque<T>
         }
     }
 
-    public bool TryAddFirst(T item) {
-        throw new NotImplementedException();
-    }
-
     public void AddLast(T item) {
         if (!TryAddLast(item)) {
             throw CollectionUtil.CollectionFullException();
         }
     }
 
+    public bool TryAddFirst(T item) {
+        int head = _head;
+        if (head >= 0) {
+            head = Dec(head, _elements.Length);
+            if (head == _tail) {
+                return false;
+            }
+            _elements[head] = item;
+            _head = head;
+            return true;
+        }
+        _head = _tail = 0;
+        _elements[0] = item;
+        _version++;
+        return true;
+    }
+
     public bool TryAddLast(T item) {
-        throw new NotImplementedException();
+        int tail = _tail;
+        if (tail >= 0) {
+            tail = Inc(tail, _elements.Length);
+            if (tail == _head) {
+                return false;
+            }
+            _elements[tail] = item;
+            _tail = tail;
+            return true;
+        }
+        _head = _tail = 0;
+        _elements[0] = item;
+        _version++;
+        return true;
     }
 
     public T RemoveFirst() {
-        throw new NotImplementedException();
-    }
-
-    public bool TryRemoveFirst(out T item) {
-        throw new NotImplementedException();
+        if (_head < 0) {
+            throw CollectionUtil.CollectionEmptyException();
+        }
+        TryRemoveFirst(out T item);
+        return item;
     }
 
     public T RemoveLast() {
-        throw new NotImplementedException();
+        if (_head < 0) {
+            throw CollectionUtil.CollectionEmptyException();
+        }
+        TryRemoveLast(out T item);
+        return item;
+    }
+
+    public bool TryRemoveFirst(out T item) {
+        int head = _head;
+        if (head < 0) {
+            item = default;
+            return false;
+        }
+        T[] elements = _elements;
+        item = elements[head];
+        elements[head] = default;
+        if (head == _tail) {
+            _head = _tail = -1;
+        }
+        else {
+            _head = Inc(head, elements.Length);
+        }
+        _version++;
+        return true;
     }
 
     public bool TryRemoveLast(out T item) {
-        throw new NotImplementedException();
+        int tail = _tail;
+        if (tail < 0) {
+            item = default;
+            return false;
+        }
+        T[] elements = _elements;
+        item = elements[tail];
+        elements[tail] = default;
+        if (tail == _head) {
+            _head = _tail = -1;
+        }
+        else {
+            _tail = Dec(tail, elements.Length);
+        }
+        _version++;
+        return true;
     }
 
     public bool Contains(T item) {
-        throw new NotImplementedException();
+        if (_head < 0) {
+            return false;
+        }
+        return IndexOf(item) >= 0;
     }
 
+    /** 性能较差，不建议调用 */
     public bool Remove(T item) {
-        throw new NotImplementedException();
+        int index = IndexOf(item);
+        if (index < 0) {
+            return false;
+        }
+        RemoveAt(index);
+        return true;
     }
 
     public void Clear() {
         _tail = _head = -1;
         Array.Fill(_elements, default);
+    }
+
+    private void RemoveAt(int index) {
+        if (index == _head) {
+            RemoveFirst();
+            return;
+        }
+        if (index == _tail) {
+            RemoveLast();
+            return;
+        }
+        int head = _head;
+        int tail = _tail;
+        T[] elements = _elements;
+        if (head < tail) {
+            // 哪边元素少拷贝哪边
+            if (index - head >= tail - index) {
+                MoveFront(elements, index, tail);
+            }
+            else {
+                MoveBack(elements, index, head);
+            }
+        }
+        else if (index < tail) { // [0, tail - 1]，向前拷贝
+            MoveFront(elements, index, tail);
+        }
+        else { // [head + 1, length-1]，向后拷贝
+            Debug.Assert(index > _head);
+            MoveBack(elements, index, head);
+        }
+        _version++;
+    }
+
+    /** 向前拷贝 -- index不能为tail，+1可能越界 */
+    private void MoveFront(T[] elements, int index, int tail) {
+        Array.Copy(elements, index + 1, elements, index, tail - index);
+        elements[tail] = default;
+        _tail = Dec(tail, elements.Length);
+    }
+
+    /** 向后拷贝 -- index不能为head，+1可能越界 */
+    private void MoveBack(T[] elements, int index, int head) {
+        Array.Copy(elements, head, elements, head + 1, index - head);
+        elements[head] = default;
+        _head = Inc(head, elements.Length);
+    }
+
+    /** 返回的是真实索引 */
+    private int IndexOf(T item) {
+        int head = _head;
+        int tail = _tail;
+        // item为null的情况不多，这可以简化代码
+        IEqualityComparer<T> comparer = item == null ? NullEquality<T>.Default : EqualityComparer<T>.Default;
+        if (head <= tail) {
+            for (int i = head; i <= tail; i++) {
+                if (comparer.Equals(item, _elements[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        else {
+            for (int i = head; i < _elements.Length; i++) {
+                if (comparer.Equals(item, _elements[i])) {
+                    return i;
+                }
+            }
+            for (int i = 0; i <= tail; i++) {
+                if (comparer.Equals(item, _elements[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
     }
 
     #endregion
@@ -244,15 +394,52 @@ public class BoundedArrayDeque<T> : IDeque<T>
     #region itr
 
     public IEnumerator<T> GetEnumerator() {
-        throw new NotImplementedException();
+        return new DequeItr(this, false);
     }
 
     public IEnumerator<T> GetReversedEnumerator() {
-        throw new NotImplementedException();
+        return new DequeItr(this, true);
     }
 
     public void CopyTo(T[] array, int arrayIndex, bool reversed = false) {
-        throw new NotImplementedException();
+        if (array == null) throw new ArgumentNullException(nameof(array));
+        if (array.Length - arrayIndex < Count) throw new ArgumentException("Array is too small");
+
+        int head = _head;
+        if (head < 0) {
+            return;
+        }
+        int tail = _tail;
+        T[] elements = _elements;
+        if (head == tail) {
+            array[arrayIndex] = elements[head];
+            return;
+        }
+        if (reversed) {
+            if (head <= tail) {
+                for (int i = tail; i >= head; i--) {
+                    array[arrayIndex++] = elements[i];
+                }
+            }
+            else {
+                for (int i = tail; i >= 0; i--) {
+                    array[arrayIndex++] = elements[i];
+                }
+                for (int i = elements.Length - 1; i >= head; i--) {
+                    array[arrayIndex++] = elements[i];
+                }
+            }
+        }
+        else {
+            if (head <= tail) {
+                Array.Copy(elements, head, array, arrayIndex, (tail - head + 1));
+            }
+            else {
+                int headLen = (elements.Length - head);
+                Array.Copy(elements, head, array, arrayIndex, headLen);
+                Array.Copy(elements, 0, array, arrayIndex + headLen, (_tail + 1));
+            }
+        }
     }
 
     public IDeque<T> Reversed() {
@@ -263,4 +450,49 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     #endregion
+
+    private class DequeItr : IEnumerator<T>
+    {
+        private readonly BoundedArrayDeque<T> _arrayDeque;
+        private readonly bool _reversed;
+        private int _version;
+        private int _cursor;
+        private T? _current;
+
+        public DequeItr(BoundedArrayDeque<T> arrayDeque, bool reversed) {
+            _arrayDeque = arrayDeque;
+            _reversed = reversed;
+            _version = arrayDeque._version;
+
+            _cursor = _reversed ? _arrayDeque._tail : _arrayDeque._head;
+            _current = default;
+        }
+
+        public bool MoveNext() {
+            if (_version != _arrayDeque._version) {
+                throw new InvalidOperationException("EnumFailedVersion");
+            }
+            if (_cursor < 0) {
+                _current = default;
+                return false;
+            }
+            _current = _arrayDeque._elements[_cursor];
+            _cursor = _reversed
+                ? Dec(_cursor, _arrayDeque._elements.Length)
+                : Inc(_cursor, _arrayDeque._elements.Length);
+            return true;
+        }
+
+        public void Reset() {
+            _cursor = _reversed ? _arrayDeque._tail : _arrayDeque._head;
+            _current = default;
+        }
+
+        public T Current => _current;
+
+        object IEnumerator.Current => _current;
+
+        public void Dispose() {
+        }
+    }
 }
