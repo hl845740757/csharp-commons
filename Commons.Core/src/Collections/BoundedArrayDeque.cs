@@ -43,20 +43,20 @@ public class BoundedArrayDeque<T> : IDeque<T>
     /// <param name="capacity">初始容量</param>
     /// <param name="overflowBehavior">溢出策略</param>
     /// <exception cref="ArgumentException"></exception>
-    public BoundedArrayDeque(int capacity = 17,
-                             DequeOverflowBehavior overflowBehavior = DequeOverflowBehavior.ThrowException) {
+    public BoundedArrayDeque(int capacity, DequeOverflowBehavior overflowBehavior = DequeOverflowBehavior.ThrowException) {
         if (capacity < 1) throw new ArgumentException(nameof(capacity));
         _elements = new T[capacity];
         _overflowBehavior = overflowBehavior;
         _head = _tail = -1;
     }
 
+    public bool IsEmpty => _head < 0;
+    public bool IsFull => (_tail + 1 == _head) || (_head == 0 && (_tail + 1 == +_elements.Length));
+    public int Capacity => _elements.Length;
     public DequeOverflowBehavior OverflowBehavior => _overflowBehavior;
 
     public bool IsReadOnly => false;
     public int Count => _head < 0 ? 0 : Length(_tail, _head, _elements.Length);
-    public bool IsEmpty => _head < 0;
-    public bool IsFull => (_tail + 1 == _head) || (_head == 0 && (_tail + 1 == +_elements.Length));
 
     /// <summary>
     /// 读写特定索引下的元素
@@ -89,7 +89,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     private static int Inc(int i, int distance, int modulus) {
-        if ((i += distance) - modulus >= 0) i -= modulus;
+        if ((i += distance) >= modulus) i -= modulus;
         return i;
     }
 
@@ -113,7 +113,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public T PeekLast() {
-        if (_head < 0) {
+        if (_tail < 0) {
             throw CollectionUtil.CollectionEmptyException();
         }
         return _elements[_tail];
@@ -129,7 +129,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public bool TryPeekLast(out T item) {
-        if (_head < 0) {
+        if (_tail < 0) {
             item = default;
             return false;
         }
@@ -153,7 +153,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         int head = _head;
         if (head >= 0) {
             head = Dec(head, _elements.Length);
-            if (head == _tail) {
+            if (head == _tail && !_overflowBehavior.AllowDiscardTail()) {
                 return false;
             }
             _elements[head] = item;
@@ -170,7 +170,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         int tail = _tail;
         if (tail >= 0) {
             tail = Inc(tail, _elements.Length);
-            if (tail == _head) {
+            if (tail == _head && !_overflowBehavior.AllowDiscardHead()) {
                 return false;
             }
             _elements[tail] = item;
@@ -184,19 +184,17 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public T RemoveFirst() {
-        if (_head < 0) {
-            throw CollectionUtil.CollectionEmptyException();
+        if (TryRemoveFirst(out T item)) {
+            return item;
         }
-        TryRemoveFirst(out T item);
-        return item;
+        throw CollectionUtil.CollectionEmptyException();
     }
 
     public T RemoveLast() {
-        if (_head < 0) {
-            throw CollectionUtil.CollectionEmptyException();
+        if (TryRemoveLast(out T item)) {
+            return item;
         }
-        TryRemoveLast(out T item);
-        return item;
+        throw CollectionUtil.CollectionEmptyException();
     }
 
     public bool TryRemoveFirst(out T item) {
@@ -238,10 +236,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public bool Contains(T item) {
-        if (_head < 0) {
-            return false;
-        }
-        return IndexOf(item) >= 0;
+        return _head >= 0 && IndexOf(item) >= 0;
     }
 
     /** 性能较差，不建议调用 */
@@ -255,7 +250,9 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public void Clear() {
+        if (_head < 0) return;
         _tail = _head = -1;
+        _version++;
         Array.Fill(_elements, default);
     }
 
@@ -451,6 +448,10 @@ public class BoundedArrayDeque<T> : IDeque<T>
 
     #endregion
 
+    public override string ToString() {
+        return $"{nameof(_overflowBehavior)}: {_overflowBehavior}, {nameof(_head)}: {_head}, {nameof(_tail)}: {_tail}, {nameof(Count)}: {Count}";
+    }
+
     private class DequeItr : IEnumerator<T>
     {
         private readonly BoundedArrayDeque<T> _arrayDeque;
@@ -477,9 +478,19 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 return false;
             }
             _current = _arrayDeque._elements[_cursor];
-            _cursor = _reversed
-                ? Dec(_cursor, _arrayDeque._elements.Length)
-                : Inc(_cursor, _arrayDeque._elements.Length);
+            // 避免一直迭代
+            if (_reversed) {
+                _cursor = Dec(_cursor, _arrayDeque._elements.Length);
+                if (_cursor == _arrayDeque._tail) {
+                    _cursor = -1;
+                }
+            }
+            else {
+                _cursor = Inc(_cursor, _arrayDeque._elements.Length);
+                if (_cursor == _arrayDeque._head) {
+                    _cursor = -1;
+                }
+            }
             return true;
         }
 

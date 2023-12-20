@@ -76,7 +76,7 @@ public class LinkedDictionaryTest
         dictionary.DefaultValue = "wjybxx";
         // 测试默认值
         {
-            dictionary.TryGetValueOrDefault("abc", out string value);
+            dictionary.TryGetValue("abc", out string value);
             Assert.That(value, Is.EqualTo(dictionary.DefaultValue));
         }
 

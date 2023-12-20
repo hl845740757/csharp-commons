@@ -24,15 +24,25 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 public enum DequeOverflowBehavior : byte
 {
-    /** 抛出异常 */
+    /// <summary>
+    /// 抛出异常
+    /// </summary>
     ThrowException = 0,
 
-    /** 丢弃首部 -- 当尾部插入元素时，允许覆盖首部；首部插入时抛出异常 */
+    /// <summary>
+    /// 丢弃首部 -- 当尾部插入元素时，允许覆盖首部；首部插入时抛出异常。
+    /// eg：undo队列
+    /// </summary>
     DiscardHead = 1,
 
-    /** 丢弃尾部 -- 当首部插入元素时，允许覆盖尾部；尾部插入时抛出异常 */
+    /// <summary>
+    /// 丢弃尾部 -- 当首部插入元素时，允许覆盖尾部；尾部插入时抛出异常。
+    /// eg: redo队列
+    /// </summary>
     DiscardTail = 2,
 
-    /** 环形缓冲 -- 首部插入时覆盖尾部；尾部插入时覆盖首部； */
+    /// <summary>
+    /// 环形缓冲 -- 首部插入时覆盖尾部；尾部插入时覆盖首部。
+    /// </summary>
     CircleBuffer = 3,
 }

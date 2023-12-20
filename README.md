@@ -8,8 +8,8 @@
 
 1. LinkedDictionary 保持插入顺序的字典，并提供大量的有用方法。
 2. LinkedHashSet 保持插入顺序的Set，并提供大量的有用方法。
-3. MultiChunkDeque 分块双端队列，实现了Queue和Stack接口。
-4. IndexedPriorityQueue 含索引的优先级队列，高查询和删除效率。
+3. IndexedPriorityQueue 含索引的优先级队列，高查询和删除效率。
+4. MultiChunkDeque 分块双端队列，实现了Queue和Stack接口。
 
 LinkedDictionary特殊接口示例：
 

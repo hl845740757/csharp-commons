@@ -20,9 +20,10 @@ namespace Wjybxx.Commons.Collections;
 
 /// <summary>
 /// 集合的特征值，按比特位存储
+/// (未来扩展项)
 /// </summary>
 [Flags]
-public enum CollectionOption : byte
+internal enum CollectionOption : byte
 {
     /** 在负载小于一定值的情况下自动缩减容量 */
     AutoTrim = 1 << 0,

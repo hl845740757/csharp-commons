@@ -21,18 +21,24 @@ using System.Collections;
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// 基于多分块的双端队列
+/// 基于多分块的无界双端队列
+/// 
+/// 分块的主要优点：
+/// 1.可以降低扩容成本。
+/// 2.可以及时回收内存。
+/// 3.可以降低删除中间元素的成本。
+///
+/// 主要缺点：
+/// 1.有一定的转发开销。
+/// 2.索引或访问任意索引的元素效率低；不过，我们通常都是队首队尾操作，因此影响较小。
 /// </summary>
 public class MultiChunkDeque<T> : IDeque<T>
 {
-    private const int MinChunkSize = 16;
+    private const int MinChunkSize = 4;
     private static readonly Stack<Chunk> EmptyChunkPool = new();
 
     private readonly int _chunkSize;
     private readonly int _poolSize;
-
-    /** chunk序号 */
-    private int _chunkSeq;
     /** 缓存块 */
     private readonly Stack<Chunk> _chunkPool;
 
@@ -40,10 +46,8 @@ public class MultiChunkDeque<T> : IDeque<T>
     private Chunk? _headChunk;
     /** 队尾所在块 */
     private Chunk? _tailChunk;
-    /** 元素数量缓存 */
+    /** 元素数量缓存 -- 无需额外版本号，每个Chunk都有版本 */
     private int _count;
-    /** 版本号 -- 增删元素时增加 */
-    private int _version;
 
     /// <summary>
     /// 
@@ -61,13 +65,13 @@ public class MultiChunkDeque<T> : IDeque<T>
     public bool IsReadOnly => false;
     public int Count => _count;
 
-    #region get/contains
+    #region dequeue
 
     public T PeekFirst() {
         if (_headChunk == null) {
-            throw CollectionEmptyException();
+            throw CollectionUtil.CollectionEmptyException();
         }
-        return _headChunk.First;
+        return _headChunk.PeekFirst();
     }
 
     public bool TryPeekFirst(out T item) {
@@ -75,15 +79,14 @@ public class MultiChunkDeque<T> : IDeque<T>
             item = default;
             return false;
         }
-        item = _headChunk.First;
-        return true;
+        return _headChunk.TryPeekFirst(out item);
     }
 
     public T PeekLast() {
         if (_tailChunk == null) {
-            throw CollectionEmptyException();
+            throw CollectionUtil.CollectionEmptyException();
         }
-        return _tailChunk.Last;
+        return _tailChunk.PeekLast();
     }
 
     public bool TryPeekLast(out T item) {
@@ -91,97 +94,136 @@ public class MultiChunkDeque<T> : IDeque<T>
             item = default;
             return false;
         }
-        item = _tailChunk.Last;
-        return true;
+        return _tailChunk.TryPeekLast(out item);
     }
-
-    public bool Contains(T item) {
-        return GetChunk(item, out _) != null;
-    }
-
-    #endregion
-
-    #region dequeue
 
     public void AddFirst(T item) {
-        Insert(item, InsertionOrder.Head);
+        TryAddFirst(item); // 调用tryAdd减少维护代码
     }
 
     public void AddLast(T item) {
-        Insert(item, InsertionOrder.Tail);
+        TryAddLast(item);
+    }
+
+    public T RemoveFirst() {
+        if (TryRemoveFirst(out T item)) { // 调用tryRemove减少维护代码
+            return item;
+        }
+        throw CollectionUtil.CollectionEmptyException();
+    }
+
+    public T RemoveLast() {
+        if (TryRemoveLast(out T item)) {
+            return item;
+        }
+        throw CollectionUtil.CollectionEmptyException();
     }
 
     public bool TryAddFirst(T item) {
-        Insert(item, InsertionOrder.Head);
+        Chunk headChunk = _headChunk;
+        if (headChunk == null) {
+            headChunk = _headChunk = _tailChunk = AllocChunk();
+        }
+        else if (headChunk.IsFull) {
+            headChunk = AllocChunk();
+            headChunk._next = _headChunk;
+            _headChunk!._prev = headChunk;
+            _headChunk = headChunk;
+        }
+        headChunk.AddFirst(item);
+        _count++;
         return true;
     }
 
     public bool TryAddLast(T item) {
-        Insert(item, InsertionOrder.Tail);
-        return true;
-    }
-
-    public T RemoveFirst() {
-        if (_headChunk == null) {
-            throw CollectionEmptyException();
+        Chunk tailChunk = _tailChunk;
+        if (tailChunk == null) {
+            tailChunk = _headChunk = _tailChunk = AllocChunk();
         }
-        T item = _headChunk.Last;
-        Remove(_headChunk, item, _headChunk._firstIndex);
-        return item;
+        else if (tailChunk.IsFull) {
+            tailChunk = AllocChunk();
+            tailChunk._prev = _tailChunk;
+            _tailChunk!._next = tailChunk;
+            _tailChunk = tailChunk;
+        }
+        tailChunk.AddLast(item);
+        _count++;
+        return true;
     }
 
     public bool TryRemoveFirst(out T item) {
-        if (_headChunk == null) {
-            item = default;
-            return false;
+        Chunk headChunk = _headChunk;
+        if (headChunk == null) {
+            throw CollectionUtil.CollectionEmptyException();
         }
-        item = _headChunk.Last;
-        Remove(_headChunk, item, _headChunk._firstIndex);
-        return true;
-    }
-
-    public T RemoveLast() {
-        if (_tailChunk == null) {
-            throw CollectionEmptyException();
+        if (headChunk.TryRemoveFirst(out item)) {
+            _count--;
+            if (headChunk.IsEmpty && headChunk._next != null) {
+                _headChunk = headChunk._next;
+                _headChunk._prev = null;
+                headChunk._next = null;
+                ReleaseChunk(headChunk);
+            }
+            return true;
         }
-        T item = _tailChunk.Last;
-        Remove(_tailChunk, item, _tailChunk._lastIndex);
-        return item;
+        return false;
     }
 
     public bool TryRemoveLast(out T item) {
-        if (_tailChunk == null) {
-            item = default;
-            return false;
+        Chunk tailChunk = _tailChunk;
+        if (tailChunk == null) {
+            throw CollectionUtil.CollectionEmptyException();
         }
-        item = _tailChunk.Last;
-        Remove(_tailChunk, item, _tailChunk._lastIndex);
-        return true;
+        if (tailChunk.TryRemoveLast(out item)) {
+            _count--;
+            if (tailChunk.IsEmpty && tailChunk._prev != null) {
+                _tailChunk = tailChunk._prev;
+                _tailChunk._next = null;
+                tailChunk._prev = null;
+                ReleaseChunk(tailChunk);
+            }
+            return true;
+        }
+        return false;
     }
 
+    /** 性能差，不建议使用 */
+    public bool Contains(T item) {
+        for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
+            if (chunk.Contains(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 性能差，不建议使用 */
     public bool Remove(T item) {
-        Chunk chunk = GetChunk(item, out int index);
-        if (chunk == null) return false;
-        Remove(chunk, item, index);
-        return true;
+        for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
+            if (chunk.Remove(item)) {
+                _count--; // 中间删除元素的时候不额外处理，代码不常走到
+                return true;
+            }
+        }
+        return false;
     }
 
     public void Clear() {
-        if (_count > 0) {
-            // 回收所有chunk
-            for (Chunk chunk = _headChunk; chunk != null;) {
-                Chunk nextChunk = chunk._next; // Release会清理引用，先暂存下来
-                ReleaseChunk(chunk);
-                chunk = nextChunk;
-            }
-            _headChunk = _tailChunk = null;
-            _count = 0;
-            _version++;
+        if (_count <= 0) {
+            return;
         }
+        // 回收所有chunk
+        for (Chunk chunk = _headChunk; chunk != null;) {
+            Chunk nextChunk = chunk._next; // Release会清理引用，先暂存下来
+            ReleaseChunk(chunk);
+            chunk = nextChunk;
+        }
+        _headChunk = _tailChunk = null;
+        _count = 0;
     }
 
     public void AdjustCapacity(int expectedCount) {
-        // TODO
+        // 无需响应
     }
 
     #endregion
@@ -245,15 +287,29 @@ public class MultiChunkDeque<T> : IDeque<T>
     #region itr
 
     public IEnumerator<T> GetEnumerator() {
-        throw new NotImplementedException();
+        return new DequeItr(this, false);
     }
 
     public IEnumerator<T> GetReversedEnumerator() {
-        throw new NotImplementedException();
+        return new DequeItr(this, true);
     }
 
     public void CopyTo(T[] array, int arrayIndex, bool reversed = false) {
-        throw new NotImplementedException();
+        if (array == null) throw new ArgumentNullException(nameof(array));
+        if (array.Length - arrayIndex < Count) throw new ArgumentException("Array is too small");
+
+        if (reversed) {
+            for (Chunk chunk = _tailChunk; chunk != null; chunk = chunk._prev) {
+                chunk.CopyTo(array, arrayIndex, true);
+                arrayIndex += chunk.Count;
+            }
+        }
+        else {
+            for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
+                chunk.CopyTo(array, arrayIndex, false);
+                arrayIndex += chunk.Count;
+            }
+        }
     }
 
     public IDeque<T> Reversed() {
@@ -262,20 +318,7 @@ public class MultiChunkDeque<T> : IDeque<T>
 
     #endregion
 
-    #region core
-
-    private Chunk? GetChunk(T item, out int index) {
-        index = -1;
-        throw new NotImplementedException();
-    }
-
-    private void Insert(T item, InsertionOrder head) {
-        throw new NotImplementedException();
-    }
-
-    private void Remove(Chunk chunk, T item, int index) {
-        throw new NotImplementedException();
-    }
+    #region util
 
     private void ReleaseChunk(Chunk chunk) {
         chunk.Reset();
@@ -292,58 +335,91 @@ public class MultiChunkDeque<T> : IDeque<T>
         else {
             chunk = new Chunk(_chunkSize);
         }
-        chunk._chunkIndex = _chunkSeq++; // version似乎是个好主意?
         return chunk;
     }
 
     #endregion
 
-    #region util
-
-    private static IEqualityComparer<T> Comparer => EqualityComparer<T>.Default;
-
-    private static InvalidOperationException CollectionEmptyException() {
-        return new InvalidOperationException("Collection is Empty");
-    }
-
-    #endregion
-
-    /** 每一个Chunk是一个有界环形队列 */
-    private class Chunk
+    private class DequeItr : IEnumerator<T>
     {
-        internal T[] _elements;
-        internal int _firstIndex;
-        internal int _lastIndex;
+        private readonly MultiChunkDeque<T> _deque;
+        private readonly bool _reversed;
 
-        /** 用以识别chunk的有效性，当chunk被重用时，index会变化 */
-        internal int _chunkIndex;
-        internal Chunk? _prev;
-        internal Chunk? _next;
+        private Chunk? _chunk;
+        private IEnumerator<T>? _chunkItr;
 
-        public Chunk(int length) {
-            _elements = new T[length];
-            _firstIndex = _lastIndex = -1;
+        public DequeItr(MultiChunkDeque<T> deque, bool reversed) {
+            this._deque = deque;
+            this._reversed = reversed;
+            this.Reset();
         }
 
-        public T First => _elements[_firstIndex];
-        public T Last => _elements[_lastIndex];
-
-        public int Count => _lastIndex == -1 ? 0 : (_lastIndex - _firstIndex + 1);
-
-        public int IndexOf(T item) {
-            IEqualityComparer<T> comparer = Comparer;
-            T[] elements = _elements;
-            for (int i = _firstIndex; i < _lastIndex; i++) {
-                if (comparer.Equals(item, elements[i])) {
-                    return i;
+        public bool MoveNext() {
+            if (_chunkItr == null) {
+                return false;
+            }
+            if (_chunkItr.MoveNext()) {
+                return true;
+            }
+            if (_reversed) {
+                // 大量调用remove的情况下，中间可能有空块
+                while (_chunk!._prev != null) {
+                    _chunk = _chunk._prev;
+                    _chunkItr = _chunk.GetReversedEnumerator();
+                    if (_chunkItr.MoveNext()) {
+                        return true;
+                    }
+                }
+                this._chunk = null;
+                this._chunkItr = null;
+                return false;
+            }
+            while (_chunk!._next != null) {
+                _chunk = _chunk._next;
+                _chunkItr = _chunk.GetEnumerator();
+                if (_chunkItr.MoveNext()) {
+                    return true;
                 }
             }
-            return -1;
+            this._chunk = null;
+            this._chunkItr = null;
+            return false;
         }
 
         public void Reset() {
-            Array.Fill(_elements, default);
-            _firstIndex = _lastIndex = -1;
+            if (_deque.Count == 0) {
+                this._chunk = null;
+                this._chunkItr = null;
+            }
+            else if (_reversed) {
+                this._chunk = _deque._tailChunk;
+                this._chunkItr = _chunk!.GetReversedEnumerator();
+            }
+            else {
+                this._chunk = _deque._headChunk;
+                this._chunkItr = _chunk!.GetEnumerator();
+            }
+        }
+
+        public T Current => _chunkItr == null ? default : _chunkItr.Current;
+        object IEnumerator.Current => Current;
+
+        public void Dispose() {
+        }
+    }
+
+    /** 每一个Chunk是一个有界环形队列 */
+    private class Chunk : BoundedArrayDeque<T>
+    {
+        internal Chunk? _prev;
+        internal Chunk? _next;
+
+        public Chunk(int length) : base(length) {
+        }
+
+        public void Reset() {
+            Clear();
+            // chunkIndex不立即重置，而是重用时分配
             _prev = null;
             _next = null;
         }
