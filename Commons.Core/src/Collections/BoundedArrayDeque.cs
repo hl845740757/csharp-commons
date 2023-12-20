@@ -84,26 +84,26 @@ public class BoundedArrayDeque<T> : IDeque<T>
 
     /// <summary>
     /// 设置最大容量
-    /// 当容量缩小时，执行对应的溢出策略
+    /// (用户也可使用这种方式实现扩容 -- 或者说达到无界的效用)
     /// </summary>
     /// <param name="capacity">新的容量</param>
     /// <param name="overflowBehavior">容量缩小时的溢出策略，不会保存</param>
-    public void SetCapacity(int capacity, DequeOverflowBehavior overflowBehavior) {
+    public void SetCapacity(int capacity,
+                            DequeOverflowBehavior overflowBehavior = DequeOverflowBehavior.ThrowException) {
         if (capacity < 0) throw new ArgumentException(nameof(capacity));
         if (capacity == this.Capacity) {
             return;
         }
         int count = Count;
         if (capacity < count) {
-            Compress(); // 压缩为连续空间，以方便拷贝
             T[] elements;
             switch (overflowBehavior) {
                 case DequeOverflowBehavior.DiscardHead: {
-                    elements = CollectionUtil.CopyOf(_elements, _head + (count - capacity), capacity);
+                    elements = GetRange((count - capacity), capacity);
                     break;
                 }
                 case DequeOverflowBehavior.DiscardTail: {
-                    elements = CollectionUtil.CopyOf(_elements, _head, capacity);
+                    elements = GetRange(0, capacity);
                     break;
                 }
                 default:
@@ -204,10 +204,11 @@ public class BoundedArrayDeque<T> : IDeque<T>
             }
             elements[head] = item;
             _head = head;
-            return true;
         }
-        _head = _tail = 0;
-        elements[0] = item;
+        else {
+            elements[0] = item;
+            _head = _tail = 0;
+        }
         _version++;
         return true;
     }
@@ -225,10 +226,11 @@ public class BoundedArrayDeque<T> : IDeque<T>
             }
             elements[tail] = item;
             _tail = tail;
-            return true;
         }
-        _head = _tail = 0;
-        elements[0] = item;
+        else {
+            elements[0] = item;
+            _head = _tail = 0;
+        }
         _version++;
         return true;
     }
@@ -318,8 +320,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         int head = _head;
         int tail = _tail;
         T[] elements = _elements;
-        if (head < tail) {
-            // 哪边元素少拷贝哪边
+        if (head < tail) { // 哪边元素少拷贝哪边
             if (index - head >= tail - index) {
                 MoveFront(elements, index, tail);
             }
@@ -490,28 +491,32 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     /// <summary>
-    /// 压缩为连续空间
+    /// 获取Deque中的一段数据
     /// </summary>
-    /// <param name="buffer">缓冲区</param>
-    public void Compress(T[]? buffer = null) {
-        int head = _head;
-        int tail = _tail;
-        if (head <= tail) { // 一定连续，包含队列空的情况
-            return;
+    /// <param name="offset">偏移[0, count]</param>
+    /// <param name="length">长度</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    public T[] GetRange(int offset, int length) {
+        if (offset < 0 || length < 0 || (offset + length > Count)) {
+            throw new ArgumentException($"offset: {offset}, length: {length}, count: {Count}");
         }
-        if (buffer == null || buffer.Length < Count / 2) {
-            buffer = new T[Count / 2];
-        }
-        // 哪边元素少拷贝哪边到buffer
         T[] elements = _elements;
-        if (elements.Length - _head >= tail + 1) {
-            Array.Copy(elements, 0, buffer, 0, tail + 1);
-            // Array.Copy(elements, head, elements,);
+        T[] result = new T[length];
+        if (_head <= _tail) {
+            Array.Copy(elements, _head + offset, result, 0, length);
+            return result;
+        }
+        int start = Inc(_head, offset, elements.Length);
+        int headLen = elements.Length - start;
+        if (start > _tail && length > headLen) { // 需要拷贝两部分
+            Array.Copy(elements, start, result, 0, headLen);
+            Array.Copy(elements, 0, result, headLen, length - headLen);
         }
         else {
-            
+            Array.Copy(elements, start, result, 0, length);
         }
-
+        return result;
     }
 
     public IDeque<T> Reversed() {

@@ -31,7 +31,7 @@ namespace Wjybxx.Commons.Collections;
 ///
 /// 主要缺点：
 /// 1.有一定的转发开销。
-/// 2.索引或访问任意索引的元素效率低；不过，我们通常都是队首队尾操作，因此影响较小。
+/// 2.查找或随机访问的效率低；不过，我们通常都是队首队尾操作，因此影响较小。
 /// </summary>
 public class MultiChunkDeque<T> : IDeque<T>
 {
@@ -334,7 +334,7 @@ public class MultiChunkDeque<T> : IDeque<T>
         }
         else {
             for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
-                chunk.CopyTo(array, arrayIndex, false);
+                chunk.CopyTo(array, arrayIndex);
                 arrayIndex += chunk.Count;
             }
         }

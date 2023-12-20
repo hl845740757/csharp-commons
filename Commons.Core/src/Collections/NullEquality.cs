@@ -18,6 +18,10 @@
 
 namespace Wjybxx.Commons.Collections;
 
+/// <summary>
+/// 用于匹配Null元素
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class NullEquality<T> : IEqualityComparer<T>
 {
     public static readonly NullEquality<T> Default = new();

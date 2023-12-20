@@ -29,4 +29,6 @@ internal enum CollectionOption : byte
     AutoTrim = 1 << 0,
     /** 序列化字典的默认值 */
     SerialDefaultValue = 1 << 1,
+    /** 固定容量 -- 禁止扩容 */
+    FixedCapacity = 1 << 2,
 }

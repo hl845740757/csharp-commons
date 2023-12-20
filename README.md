@@ -9,7 +9,8 @@
 1. LinkedDictionary 保持插入顺序的字典，并提供大量的有用方法。
 2. LinkedHashSet 保持插入顺序的Set，并提供大量的有用方法。
 3. IndexedPriorityQueue 含索引的优先级队列，高查询和删除效率。
-4. MultiChunkDeque 分块双端队列，实现了Queue和Stack接口。
+4. BoundedArrayDeque 基于数组的有界双端队列，允许手动调整容量。
+5. MultiChunkDeque 分块无界双端队列。
 
 LinkedDictionary特殊接口示例：
 
@@ -30,7 +31,7 @@ LinkedDictionary特殊接口示例：
 
 LinkedDictionary采用线性探测法解决hash冲突，通过在GetNode方法中记录线性探测次数，统计查询数据如下：
 
-1. 1W个int类型key，查询所有key，线性探测总次数 4000~5000， 平均值小于1 
+1. 1W个int类型key，查询所有key，线性探测总次数 4000~5000， 平均值小于1
 2. 10W个int类型key，查询所有key，线性探测总次数 11000~12000，平均值小于1
 3. 1W个string类型key，长度24，查询所有key，线性探测总次数 4000~5000，平均值小于1 -- 与int相似，且调整长度几无变化。
 4. 10W个string类型key，长度24，查询所有key，线性探测总次数 11000~12000，平均值小于1 -- 与int相似，且调整长度几无变化。
