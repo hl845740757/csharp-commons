@@ -17,6 +17,7 @@
 #endregion
 
 using System.Collections;
+using System.Diagnostics;
 
 namespace Wjybxx.Commons.Collections;
 
@@ -158,10 +159,8 @@ public class MultiChunkDeque<T> : IDeque<T>
         }
         if (headChunk.TryRemoveFirst(out item)) {
             _count--;
-            if (headChunk.IsEmpty && headChunk._next != null) {
-                _headChunk = headChunk._next;
-                _headChunk._prev = null;
-                headChunk._next = null;
+            if (headChunk.IsEmpty) {
+                FixPointers(headChunk);
                 ReleaseChunk(headChunk);
             }
             return true;
@@ -176,10 +175,8 @@ public class MultiChunkDeque<T> : IDeque<T>
         }
         if (tailChunk.TryRemoveLast(out item)) {
             _count--;
-            if (tailChunk.IsEmpty && tailChunk._prev != null) {
-                _tailChunk = tailChunk._prev;
-                _tailChunk._next = null;
-                tailChunk._prev = null;
+            if (tailChunk.IsEmpty) {
+                FixPointers(tailChunk);
                 ReleaseChunk(tailChunk);
             }
             return true;
@@ -200,10 +197,15 @@ public class MultiChunkDeque<T> : IDeque<T>
     /** 性能差，不建议使用 */
     public bool Remove(T item) {
         for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
-            if (chunk.Remove(item)) {
-                _count--; // 中间删除元素的时候不额外处理，代码不常走到
-                return true;
+            if (!chunk.Remove(item)) {
+                continue;
             }
+            _count--;
+            if (chunk.IsEmpty) {
+                FixPointers(chunk);
+                ReleaseChunk(chunk);
+            }
+            return true;
         }
         return false;
     }
@@ -224,6 +226,32 @@ public class MultiChunkDeque<T> : IDeque<T>
 
     public void AdjustCapacity(int expectedCount) {
         // 无需响应
+    }
+
+    /// <summary>
+    /// 解除chunk的引用
+    /// </summary>
+    /// <param name="chunk"></param>
+    private void FixPointers(Chunk chunk) {
+        if (_headChunk == _tailChunk) {
+            Debug.Assert(chunk == _headChunk);
+            _headChunk = _tailChunk = null;
+        }
+        else if (chunk == _headChunk) {
+            _headChunk = chunk._next;
+            _headChunk!._prev = null;
+        }
+        else if (chunk == _tailChunk) {
+            _tailChunk = chunk._prev;
+            _tailChunk!._next = null;
+        }
+        else {
+            // 删除的是中间块
+            Chunk prev = chunk._prev!;
+            Chunk next = chunk._next!;
+            prev._next = next;
+            next._prev = prev;
+        }
     }
 
     #endregion
@@ -362,7 +390,7 @@ public class MultiChunkDeque<T> : IDeque<T>
                 return true;
             }
             if (_reversed) {
-                // 大量调用remove的情况下，中间可能有空块
+                // 可能是个空块
                 while (_chunk!._prev != null) {
                     _chunk = _chunk._prev;
                     _chunkItr = _chunk.GetReversedEnumerator();

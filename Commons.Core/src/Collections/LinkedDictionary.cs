@@ -846,8 +846,8 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
         else {
             // 删除的是中间元素
-            var prev = node._prev!;
-            var next = node._next!;
+            Node prev = node._prev!;
+            Node next = node._next!;
             prev._next = next;
             next._prev = prev;
         }

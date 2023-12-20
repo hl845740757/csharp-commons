@@ -25,7 +25,8 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 public interface IIndexedElement
 {
-    const int IndexNotInCollection = -1;
+    /** 表示不在集合中的索引，也是默认索引 */
+    public const int IndexNotFound = -1;
 
     /// <summary>
     /// 获取元素在指定集合中的索引，如果不在集合中则返回-1
