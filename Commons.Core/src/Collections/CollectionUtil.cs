@@ -36,14 +36,16 @@ public static class CollectionUtil
     /// 拷贝数组
     /// </summary>
     /// <param name="src">原始四组</param>
+    /// <param name="offset">拷贝的起始偏移量</param>
     /// <param name="newLen">可大于或小于原始数组长度</param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static T[] CopyOf<T>(T[] src, int newLen) {
+    public static T[] CopyOf<T>(T[] src, int offset, int newLen) {
         if (src == null) throw new ArgumentNullException(nameof(src));
+        if (offset < 0) throw new ArgumentException("offset cant be negative");
         if (newLen < 0) throw new ArgumentException("newLen cant be negative");
         T[] result = new T[newLen];
-        Array.Copy(src, 0, result, 0, Math.Min(src.Length, newLen));
+        Array.Copy(src, offset, result, 0, Math.Min(src.Length - offset, newLen));
         return result;
     }
 

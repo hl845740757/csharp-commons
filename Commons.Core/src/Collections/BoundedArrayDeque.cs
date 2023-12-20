@@ -26,7 +26,7 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 public class BoundedArrayDeque<T> : IDeque<T>
 {
-    private readonly T[] _elements;
+    private T[] _elements;
     private readonly DequeOverflowBehavior _overflowBehavior;
 
     /// <summary>
@@ -44,19 +44,19 @@ public class BoundedArrayDeque<T> : IDeque<T>
     /// <param name="overflowBehavior">溢出策略</param>
     /// <exception cref="ArgumentException"></exception>
     public BoundedArrayDeque(int capacity, DequeOverflowBehavior overflowBehavior = DequeOverflowBehavior.ThrowException) {
-        if (capacity < 1) throw new ArgumentException(nameof(capacity));
+        if (capacity < 0) throw new ArgumentException(nameof(capacity));
         _elements = new T[capacity];
         _overflowBehavior = overflowBehavior;
         _head = _tail = -1;
     }
 
-    public bool IsEmpty => _head < 0;
-    public bool IsFull => (_tail + 1 == _head) || (_head == 0 && (_tail + 1 == +_elements.Length));
-    public int Capacity => _elements.Length;
     public DequeOverflowBehavior OverflowBehavior => _overflowBehavior;
+    public int Capacity => _elements.Length;
 
     public bool IsReadOnly => false;
     public int Count => _head < 0 ? 0 : Length(_tail, _head, _elements.Length);
+    public bool IsEmpty => _head < 0;
+    public bool IsFull => (_tail + 1 == _head) || (_head == 0 && (_tail + 1 == +_elements.Length));
 
     /// <summary>
     /// 读写特定索引下的元素
@@ -79,6 +79,48 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 throw new IndexOutOfRangeException($"count {Count}, index {index}");
             }
             elements[Inc(head, index, elements.Length)] = value;
+        }
+    }
+
+    /// <summary>
+    /// 设置最大容量
+    /// 当容量缩小时，执行对应的溢出策略
+    /// </summary>
+    /// <param name="capacity">新的容量</param>
+    /// <param name="overflowBehavior">容量缩小时的溢出策略，不会保存</param>
+    public void SetCapacity(int capacity, DequeOverflowBehavior overflowBehavior) {
+        if (capacity < 0) throw new ArgumentException(nameof(capacity));
+        if (capacity == this.Capacity) {
+            return;
+        }
+        int count = Count;
+        if (capacity < count) {
+            Compress(); // 压缩为连续空间，以方便拷贝
+            T[] elements;
+            switch (overflowBehavior) {
+                case DequeOverflowBehavior.DiscardHead: {
+                    elements = CollectionUtil.CopyOf(_elements, _head + (count - capacity), capacity);
+                    break;
+                }
+                case DequeOverflowBehavior.DiscardTail: {
+                    elements = CollectionUtil.CopyOf(_elements, _head, capacity);
+                    break;
+                }
+                default:
+                    throw new InvalidOperationException("capacity < Count");
+            }
+            _elements = elements;
+            _head = 0;
+            _tail = capacity - 1;
+            _version++;
+        }
+        else {
+            T[] elements = new T[capacity];
+            CopyTo(elements, 0);
+            _elements = elements;
+            _head = 0;
+            _tail = count - 1;
+            _version++;
         }
     }
 
@@ -150,35 +192,43 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public bool TryAddFirst(T item) {
+        T[] elements = _elements;
+        if (elements.Length == 0) {
+            return false;
+        }
         int head = _head;
         if (head >= 0) {
-            head = Dec(head, _elements.Length);
+            head = Dec(head, elements.Length);
             if (head == _tail && !_overflowBehavior.AllowDiscardTail()) {
                 return false;
             }
-            _elements[head] = item;
+            elements[head] = item;
             _head = head;
             return true;
         }
         _head = _tail = 0;
-        _elements[0] = item;
+        elements[0] = item;
         _version++;
         return true;
     }
 
     public bool TryAddLast(T item) {
+        T[] elements = _elements;
+        if (elements.Length == 0) {
+            return false;
+        }
         int tail = _tail;
         if (tail >= 0) {
-            tail = Inc(tail, _elements.Length);
+            tail = Inc(tail, elements.Length);
             if (tail == _head && !_overflowBehavior.AllowDiscardHead()) {
                 return false;
             }
-            _elements[tail] = item;
+            elements[tail] = item;
             _tail = tail;
             return true;
         }
         _head = _tail = 0;
-        _elements[0] = item;
+        elements[0] = item;
         _version++;
         return true;
     }
@@ -437,6 +487,31 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 Array.Copy(elements, 0, array, arrayIndex + headLen, (_tail + 1));
             }
         }
+    }
+
+    /// <summary>
+    /// 压缩为连续空间
+    /// </summary>
+    /// <param name="buffer">缓冲区</param>
+    public void Compress(T[]? buffer = null) {
+        int head = _head;
+        int tail = _tail;
+        if (head <= tail) { // 一定连续，包含队列空的情况
+            return;
+        }
+        if (buffer == null || buffer.Length < Count / 2) {
+            buffer = new T[Count / 2];
+        }
+        // 哪边元素少拷贝哪边到buffer
+        T[] elements = _elements;
+        if (elements.Length - _head >= tail + 1) {
+            Array.Copy(elements, 0, buffer, 0, tail + 1);
+            // Array.Copy(elements, head, elements,);
+        }
+        else {
+            
+        }
+
     }
 
     public IDeque<T> Reversed() {
