@@ -7,6 +7,7 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <RootNamespace>Commons.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,6 +19,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Commons.Core\Commons.Core.csproj" />
+      <ProjectReference Include="..\Wjybxx.Commons.Core\Wjybxx.Commons.Core.csproj" />
     </ItemGroup>
 </Project>

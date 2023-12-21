@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commons.Core", "Commons.Core\Commons.Core.csproj", "{ED690227-5E42-4480-B0C3-7A9DA6E6352C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wjybxx.Commons.Core", "Wjybxx.Commons.Core\Wjybxx.Commons.Core.csproj", "{ED690227-5E42-4480-B0C3-7A9DA6E6352C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commons.Tests", "Commons.Tests\Commons.Tests.csproj", "{12499676-55E8-46C1-827E-9DE63F981B73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wjybxx.Commons.Tests", "Wjybxx.Commons.Tests\Wjybxx.Commons.Tests.csproj", "{12499676-55E8-46C1-827E-9DE63F981B73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
