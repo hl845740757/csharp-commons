@@ -45,7 +45,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
     /// <exception cref="ArgumentException"></exception>
     public BoundedArrayDeque(int capacity, DequeOverflowBehavior overflowBehavior = DequeOverflowBehavior.ThrowException) {
         if (capacity < 0) throw new ArgumentException(nameof(capacity));
-        _elements = new T[capacity];
+        _elements = capacity == 0 ? Array.Empty<T>() : new T[capacity];
         _overflowBehavior = overflowBehavior;
         _head = _tail = -1;
     }
@@ -94,6 +94,20 @@ public class BoundedArrayDeque<T> : IDeque<T>
         if (capacity == this.Capacity) {
             return;
         }
+        
+        // 0
+        if (capacity == 0) {
+            if (Count > 0
+                && overflowBehavior != DequeOverflowBehavior.DiscardHead
+                && overflowBehavior != DequeOverflowBehavior.DiscardTail) {
+                throw new InvalidOperationException("capacity < Count");
+            }
+            _elements = Array.Empty<T>();
+            _head = _tail = -1;
+            _version++;
+            return;
+        }
+
         int count = Count;
         if (capacity < count) {
             T[] elements;
