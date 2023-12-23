@@ -7,13 +7,13 @@
         <LangVersion>10</LangVersion>
         <RootNamespace>Wjybxx.Commons</RootNamespace>
 
-        <AssemblyName>Wjybxx.Commons.Core</AssemblyName>
-        <PackageId>Wjybxx.Commons.Core</PackageId>
-        <Version>1.0.0</Version>
+        <PackageId>Wjybxx.Commons.Concurrent</PackageId>
+        <AssemblyName>Wjybxx.Commons.Concurrent</AssemblyName>
+        <Version>1.0.0-alpha</Version>
 
-        <Title>Wjybxx.Commons.Core</Title>
-        <Description>基础库之核心包，包含LinkedDictionary等集合实现</Description>
-        <PackageTags>wjybxx;collections;LinkedDictionary;</PackageTags>
+        <Title>Wjybxx.Commons.Concurrent</Title>
+        <Description>并发基础库；提供事件循环和基于事件循环的await语法</Description>
+        <PackageTags>wjybxx;concurrent;eventloop</PackageTags>
 
         <Authors>wjybxx(845740757@qq.com)</Authors>
         <Copyright>Copyright 2023 wjybxx(845740757@qq.com)</Copyright>
@@ -32,5 +32,4 @@
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
-
 </Project>

@@ -18,6 +18,10 @@
 
 namespace Wjybxx.Commons.Collections;
 
+/// <summary>
+/// 序列集合
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public interface ISequencedCollection<T> : IGenericCollection<T>
 {
     /// <summary>

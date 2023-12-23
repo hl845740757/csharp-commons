@@ -16,8 +16,13 @@
 
 #endregion
 
+#pragma warning disable CS1591
 namespace Wjybxx.Commons.Collections;
 
+/// <summary>
+/// 序列集合的反转视图
+/// </summary>
+/// <typeparam name="TKey">元素的类型</typeparam>
 public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
 {
     protected readonly ISequencedCollection<TKey> _delegated;

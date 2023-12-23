@@ -18,13 +18,18 @@
 
 namespace Wjybxx.Commons.Collections;
 
+/// <summary>
+/// 集合工具类
+/// </summary>
 public static class CollectionUtil
 {
+    /** behavior是否允许丢弃队列的首部 */
     public static bool AllowDiscardHead(this DequeOverflowBehavior behavior) {
         return behavior == DequeOverflowBehavior.CircleBuffer
                || behavior == DequeOverflowBehavior.DiscardHead;
     }
 
+    /** behavior是否允许丢弃队列的尾部 */
     public static bool AllowDiscardTail(this DequeOverflowBehavior behavior) {
         return behavior == DequeOverflowBehavior.CircleBuffer
                || behavior == DequeOverflowBehavior.DiscardTail;
@@ -49,65 +54,98 @@ public static class CollectionUtil
         return result;
     }
 
+    /** 查对象引用在数组中的下标 */
+    public static int IndexOfRef<T>(T?[] list, object? element) where T : class {
+        if (element == null) {
+            for (int idx = 0, size = list.Length; idx < size; idx++) {
+                if (list[idx] == null) {
+                    return idx;
+                }
+            }
+        }
+        else {
+            for (int idx = 0, size = list.Length; idx < size; idx++) {
+                if (ReferenceEquals(list[idx], element)) {
+                    return idx;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** 查对象引用在数组中的下标 */
+    public static int LastIndexOfRef<T>(T?[] list, object? element) where T : class {
+        if (element == null) {
+            for (int idx = list.Length - 1; idx >= 0; idx--) {
+                if (list[idx] == null) {
+                    return idx;
+                }
+            }
+        }
+        else {
+            for (int idx = list.Length - 1; idx >= 0; idx--) {
+                if (ReferenceEquals(list[idx], element)) {
+                    return idx;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** 查询List中是否包含指定对象引用 */
     public static bool ContainsRef<T>(T[] list, T element) where T : class {
-        for (int i = 0, size = list.Length; i < size; i++) {
-            if (ReferenceEquals(list[i], element)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static int IndexOfRef<T>(T[] list, Object element) where T : class {
-        for (int idx = 0, size = list.Length; idx < size; idx++) {
-            if (ReferenceEquals(list[idx], element)) {
-                return idx;
-            }
-        }
-        return -1;
-    }
-
-    public static int LastIndexOfRef<T>(T[] list, Object element) where T : class {
-        for (int idx = list.Length - 1; idx >= 0; idx--) {
-            if (ReferenceEquals(list[idx], element)) {
-                return idx;
-            }
-        }
-        return -1;
+        return IndexOfRef(list, element) >= 0;
     }
 
     #endregion
 
     #region list
 
+    /** 查对象引用在数组中的下标 */
+    public static int IndexOfRef<T>(IList<T?> list, object? element) where T : class {
+        if (element == null) {
+            for (int idx = 0, size = list.Count; idx < size; idx++) {
+                if (list[idx] == null) {
+                    return idx;
+                }
+            }
+        }
+        else {
+            for (int idx = 0, size = list.Count; idx < size; idx++) {
+                if (ReferenceEquals(list[idx], element)) {
+                    return idx;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** 查对象引用在数组中的下标 */
+    public static int LastIndexOfRef<T>(IList<T?> list, object? element) where T : class {
+        if (element == null) {
+            for (int idx = list.Count - 1; idx >= 0; idx--) {
+                if (list[idx] == null) {
+                    return idx;
+                }
+            }
+        }
+        else {
+            for (int idx = list.Count - 1; idx >= 0; idx--) {
+                if (ReferenceEquals(list[idx], element)) {
+                    return idx;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** 查询List中是否包含指定对象引用 */
     public static bool ContainsRef<T>(IList<T> list, T element) where T : class {
-        for (int i = 0, size = list.Count; i < size; i++) {
-            if (ReferenceEquals(list[i], element)) {
-                return true;
-            }
-        }
-        return false;
+        return IndexOfRef(list, element) >= 0;
     }
 
-    public static int IndexOfRef<T>(IList<T> list, Object element) where T : class {
-        for (int idx = 0, size = list.Count; idx < size; idx++) {
-            if (ReferenceEquals(list[idx], element)) {
-                return idx;
-            }
-        }
-        return -1;
-    }
-
-    public static int LastIndexOfRef<T>(IList<T> list, Object element) where T : class {
-        for (int idx = list.Count - 1; idx >= 0; idx--) {
-            if (ReferenceEquals(list[idx], element)) {
-                return idx;
-            }
-        }
-        return -1;
-    }
-
-    public static bool RemoveRef<T>(IList<T> list, Object element) where T : class {
+    /** 根据引用删除元素 */
+    public static bool RemoveRef<T>(IList<T> list, object element) where T : class {
         int index = IndexOfRef(list, element);
         if (index < 0) {
             return false;

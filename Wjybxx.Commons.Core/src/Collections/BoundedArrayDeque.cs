@@ -19,6 +19,7 @@
 using System.Collections;
 using System.Diagnostics;
 
+#pragma warning disable CS1591
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
@@ -26,6 +27,9 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 public class BoundedArrayDeque<T> : IDeque<T>
 {
+    /** 元素类型是否是引用类型 */
+    private static readonly bool ValueIsRefType = typeof(T).IsValueType;
+
     private T[] _elements;
     private readonly DequeOverflowBehavior _overflowBehavior;
 
@@ -94,48 +98,43 @@ public class BoundedArrayDeque<T> : IDeque<T>
         if (capacity == this.Capacity) {
             return;
         }
-        
+
+        int count = Count;
+        T[] elements;
+        int head, tail;
         // 0
         if (capacity == 0) {
-            if (Count > 0
+            if (count > 0
                 && overflowBehavior != DequeOverflowBehavior.DiscardHead
                 && overflowBehavior != DequeOverflowBehavior.DiscardTail) {
                 throw new InvalidOperationException("capacity < Count");
             }
-            _elements = Array.Empty<T>();
-            _head = _tail = -1;
-            _version++;
-            return;
+            elements = Array.Empty<T>();
+            head = tail = -1;
         }
-
-        int count = Count;
-        if (capacity < count) {
-            T[] elements;
-            switch (overflowBehavior) {
-                case DequeOverflowBehavior.DiscardHead: {
-                    elements = GetRange((count - capacity), capacity);
-                    break;
-                }
-                case DequeOverflowBehavior.DiscardTail: {
-                    elements = GetRange(0, capacity);
-                    break;
-                }
-                default:
-                    throw new InvalidOperationException("capacity < Count");
-            }
-            _elements = elements;
-            _head = 0;
-            _tail = capacity - 1;
-            _version++;
+        else if (capacity < count) {
+            elements = overflowBehavior switch {
+                DequeOverflowBehavior.DiscardHead => GetRange((count - capacity), capacity),
+                DequeOverflowBehavior.DiscardTail => GetRange(0, capacity),
+                _ => throw new InvalidOperationException("capacity < Count")
+            };
+            head = 0;
+            tail = capacity - 1;
         }
         else {
-            T[] elements = new T[capacity];
+            elements = new T[capacity];
             CopyTo(elements, 0);
-            _elements = elements;
-            _head = 0;
-            _tail = count - 1;
-            _version++;
+            head = 0;
+            tail = count - 1;
         }
+
+        if (ValueIsRefType) {
+            Clear(); // help gc
+        }
+        _elements = elements;
+        _head = head;
+        _tail = tail;
+        _version++;
     }
 
     private static int Length(int tail, int head, int modulus) {
@@ -316,7 +315,16 @@ public class BoundedArrayDeque<T> : IDeque<T>
     }
 
     public void Clear() {
-        if (_head < 0) return;
+        if (_head < 0 || _elements.Length == 0) return;
+        int head = _head;
+        int tail = _tail;
+        if (head <= tail) {
+            Array.Fill(_elements, default, head, (tail - head + 1));
+        }
+        else {
+            Array.Fill(_elements, default, 0, tail + 1);
+            Array.Fill(_elements, default, head, _elements.Length - head);
+        }
         _tail = _head = -1;
         _version++;
         Array.Fill(_elements, default);

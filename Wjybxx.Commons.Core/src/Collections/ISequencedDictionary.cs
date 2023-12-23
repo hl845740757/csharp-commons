@@ -18,9 +18,18 @@
 
 namespace Wjybxx.Commons.Collections;
 
+/// <summary>
+/// 序列字典
+/// </summary>
+/// <typeparam name="TKey"></typeparam>
+/// <typeparam name="TValue"></typeparam>
 public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, TValue>,
     ISequencedCollection<KeyValuePair<TKey, TValue>>
 {
+    /// <summary>
+    /// <inheritdoc cref="ISequencedCollection{T}"/>
+    /// </summary>
+    /// <returns></returns>
     new ISequencedDictionary<TKey, TValue> Reversed();
 
     /// <summary>
@@ -32,15 +41,40 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
 
     #region get
 
+    /// <summary>
+    /// 获取字典的Key集合
+    /// </summary>
     new ISequencedCollection<TKey> Keys { get; }
+    
+    /// <summary>
+    /// 获取字典的Value集合
+    /// </summary>
     new ISequencedCollection<TValue> Values { get; }
 
+    /// <summary>
+    /// 查看集合的第一个Key
+    /// </summary>
+    /// <returns></returns>
     TKey PeekFirstKey();
 
+    /// <summary>
+    /// 查看集合的最后一个Key
+    /// </summary>
+    /// <returns></returns>
     TKey PeekLastKey();
 
+    /// <summary>
+    /// 尝试获取字典的第一个key
+    /// </summary>
+    /// <param name="key">out参数，存储结果</param>
+    /// <returns>字典不为空则返回true</returns>
     bool TryPeekFirstKey(out TKey key);
 
+    /// <summary>
+    /// 尝试获取字典的最后一个key
+    /// </summary>
+    /// <param name="key">out参数，存储结果</param>
+    /// <returns>字典不为空则返回true</returns>
     bool TryPeekLastKey(out TKey key);
 
     #endregion

@@ -18,6 +18,9 @@
 
 namespace Wjybxx.Commons;
 
+/// <summary>
+/// 一些基础工具方法
+/// </summary>
 public static class ObjectUtil
 {
     /// <summary>
@@ -30,9 +33,29 @@ public static class ObjectUtil
     }
 
     /// <summary>
-    /// 如果参数为null，则返回给定的默认值
+    /// 如果参数为null，则转为给定的默认值
     /// </summary>
     public static T NullToDef<T>(T obj, T def) {
         return obj == null ? def : obj;
+    }
+
+    /// <summary>
+    /// 如果字符串为null或空字符串，则转为默认字符串
+    /// </summary>
+    /// <param name="value">value</param>
+    /// <param name="def">默认值</param>
+    /// <returns></returns>
+    public static string EmptyToDef(string value, string def) {
+        return string.IsNullOrEmpty(value) ? def : value;
+    }
+
+    /// <summary>
+    /// 如果字符串为全空白字符串，则转为默认字符串
+    /// </summary>
+    /// <param name="value">value</param>
+    /// <param name="def">默认值</param>
+    /// <returns></returns>
+    public static string BlankToDef(string value, string def) {
+        return string.IsNullOrWhiteSpace(value) ? def : value;
     }
 }

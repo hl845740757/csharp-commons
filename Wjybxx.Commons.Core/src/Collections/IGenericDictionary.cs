@@ -16,17 +16,26 @@
 
 #endregion
 
-using System.Runtime.CompilerServices;
-
 namespace Wjybxx.Commons.Collections;
 
+/// <summary>
+/// 泛型字典
+/// </summary>
+/// <typeparam name="TKey"></typeparam>
+/// <typeparam name="TValue"></typeparam>
 public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>,
     IGenericCollection<KeyValuePair<TKey, TValue>>
 {
+    /// <inheritdoc cref="IDictionary{TKey,TValue}"/>
     new TValue this[TKey key] { get; set; }
+
+    /// <inheritdoc cref="IDictionary{TKey,TValue}"/>
     new IGenericCollection<TKey> Keys { get; }
+
+    /// <inheritdoc cref="IDictionary{TKey,TValue}"/>
     new IGenericCollection<TValue> Values { get; }
 
+    /// <inheritdoc cref="IDictionary{TKey,TValue}"/>
     new bool ContainsKey(TKey key);
 
     /// <summary>
@@ -96,38 +105,6 @@ public interface IGenericDictionary<TKey, TValue> : IDictionary<TKey, TValue>, I
 
     void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) {
         Add(item.Key, item.Value);
-    }
-
-    #endregion
-
-    #region util
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static bool IsCompatibleKey(object key) {
-        return key is TKey;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static bool IsCompatibleValue(object value) {
-        return value is TValue;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static TKey EnsureCompatibleKey(object key) {
-        if (key is not TKey key2) throw new ArgumentException("Incompatible key");
-        return key2;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static TValue EnsureCompatibleValue(object? value) {
-        if (value is not TValue value2) throw new ArgumentException("Incompatible value");
-        return value2;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void EnsureCompatible(object key, object? value) {
-        if (key is not TKey) throw new ArgumentException("Incompatible key");
-        if (value is not TValue) throw new ArgumentException("Incompatible value");
     }
 
     #endregion

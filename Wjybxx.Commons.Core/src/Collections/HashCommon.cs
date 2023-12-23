@@ -50,6 +50,7 @@ public static class HashCommon
         return Math.Min((int)Math.Ceiling(capacity * factor), capacity - 1);
     }
 
+    /** 根据期望的元素个数和负载因子计算hash表的数组长度 */
     public static int ArraySize(int expected, float f) {
         long s = Math.Max(MinArraySize, NextPowerOfTwo((long)Math.Ceiling(expected / f)));
         if (s > MaxArraySize) throw new ArgumentException("Too large (" + expected + " expected elements with load factor " + f + ")");
@@ -69,6 +70,7 @@ public static class HashCommon
         return (int)Math.Min(MaxArraySize, s);
     }
 
+    /** 检查负载因子的合法性 */
     public static void CheckLoadFactor(float loadFactor) {
         if (loadFactor <= 0 || loadFactor >= 1) {
             throw new Exception("Load factor must be greater than 0 and smaller than 1");

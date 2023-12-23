@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
+#pragma warning disable CS1591
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
@@ -29,7 +30,7 @@ namespace Wjybxx.Commons.Collections;
 /// 1.由<see cref="LinkedDictionary{TKey,TValue}"/>修改而来，保留起特性。
 /// 2.使用拷贝而不是封装的方式，以减少使用开销。
 /// </summary>
-/// <typeparam name="TKey"></typeparam>
+/// <typeparam name="TKey">元素类型，允许为null</typeparam>
 [Serializable]
 public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 {

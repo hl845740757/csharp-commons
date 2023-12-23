@@ -18,9 +18,14 @@
 
 namespace Wjybxx.Commons;
 
+/// <summary>
+/// 日期时间工具类
+/// </summary>
 public static class DatetimeUtil
 {
+    /** 1毫秒对应的tick数 */
     public const long TicksPerMillisecond = 10000;
+    /** 1秒对应的tick数 */
     public const long TicksPerSecond = TicksPerMillisecond * 1000;
 
     /// <summary>

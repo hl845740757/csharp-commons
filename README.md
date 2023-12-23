@@ -1,6 +1,6 @@
 # csharp-commons
 
-个人使用的csharp公共库
+csharp公共库，包含集合等基础组件;nuget搜索'wjybxx'即可查看到相关库。
 
 ## Collections
 

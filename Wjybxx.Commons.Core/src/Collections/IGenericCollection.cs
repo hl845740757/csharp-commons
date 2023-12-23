@@ -17,21 +17,21 @@
 #endregion
 
 using System.Collections;
-using System.Runtime.CompilerServices;
 
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
-/// C#在提供了泛型实现后，集合和字典的接口简直一团乱麻；
-/// 我尝试继承非泛型接口，但C#的接口规则与java不同，在接口冲突时(有相同签名的方法时)，需要重定义方法以隐藏父接口方法，会导致非常多的方法，实在让人不爽。
+/// 泛型集合
 ///
+/// 1.未兼容非泛型的原始类型，继承非泛型集合会导致非常多的方法签名；C#在提供了泛型实现后，集合和字典的接口简直一团乱麻。
 /// 1.AddRange这类接口只对List这类接口是有意义的，可连续拷贝；对于其它集合类型则不是必须的。
 /// 2.对于其它类型结合，批量增删元素可以通过扩展方法实现，接口层提供触发扩容的接口便足够了。
 /// 
 /// </summary>
-/// <typeparam name="T"></typeparam>
+/// <typeparam name="T">元素类型</typeparam>
 public interface IGenericCollection<T> : ICollection<T>, IReadOnlyCollection<T>
 {
+    /// <inheritdoc cref="ICollection{T}"/>
     new int Count { get; }
 
     /// <summary>
@@ -52,21 +52,6 @@ public interface IGenericCollection<T> : ICollection<T>, IReadOnlyCollection<T>
 
     IEnumerator IEnumerable.GetEnumerator() {
         return GetEnumerator();
-    }
-
-    #endregion
-
-    #region util
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static bool IsCompatible(object value) {
-        return value is T;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static T EnsureCompatible(object value) {
-        if (value is not T value2) throw new ArgumentException("Incompatible value");
-        return value2;
     }
 
     #endregion

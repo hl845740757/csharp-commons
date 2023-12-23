@@ -16,8 +16,14 @@
 
 #endregion
 
+#pragma warning disable CS1591
 namespace Wjybxx.Commons.Collections;
 
+/// <summary>
+/// 序列字典的反转视图
+/// </summary>
+/// <typeparam name="TKey"></typeparam>
+/// <typeparam name="TValue"></typeparam>
 public class ReversedDictionaryView<TKey, TValue> : ReversedCollectionView<KeyValuePair<TKey, TValue>>, ISequencedDictionary<TKey, TValue>
 {
     public ReversedDictionaryView(ISequencedDictionary<TKey, TValue> delegated)

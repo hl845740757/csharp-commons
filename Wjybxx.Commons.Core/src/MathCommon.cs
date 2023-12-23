@@ -19,7 +19,7 @@
 namespace Wjybxx.Commons;
 
 /// <summary>
-/// 基础数学工具库
+/// 数学基础库
 /// </summary>
 public static class MathCommon
 {
@@ -47,6 +47,7 @@ public static class MathCommon
         return ++num;
     }
 
+    /** 计算num最接近下一个整2次幂；如果自身是2的整次幂，则会返回自身 */
     public static long NextPowerOfTwo(long num) {
         if (num < 1) {
             return 1;
@@ -63,12 +64,14 @@ public static class MathCommon
 
     #endregion
 
+    /** 将value约束到[0, 1]范围 */
     public static float Clamp01(float value) {
         if (value <= 0f) return 0f;
         if (value >= 1f) return 1f;
         return value;
     }
 
+    /** 将value约束到[0, 1]范围 */
     public static double Clamp01(double value) {
         if (value <= 0d) return 0d;
         if (value >= 1d) return 1d;

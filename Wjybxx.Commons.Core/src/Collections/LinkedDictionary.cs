@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
+#pragma warning disable CS1591
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
@@ -36,8 +37,8 @@ namespace Wjybxx.Commons.Collections;
 /// 2.C#的集合和字典库接口太差了，泛型集合与非泛型集合兼容性也不够。
 /// 
 /// </summary>
-/// <typeparam name="TKey"></typeparam>
-/// <typeparam name="TValue"></typeparam>
+/// <typeparam name="TKey">键的类型，允许为null</typeparam>
+/// <typeparam name="TValue">值的类型，允许为null</typeparam>
 [Serializable]
 public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>, ISerializable
 {

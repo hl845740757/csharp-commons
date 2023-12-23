@@ -19,6 +19,7 @@
 using System.Collections;
 using System.Diagnostics;
 
+#pragma warning disable CS1591
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>
