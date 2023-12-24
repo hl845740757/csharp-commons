@@ -2,6 +2,11 @@
 
 csharp公共库，包含集合等基础组件;nuget搜索'wjybxx'即可查看到相关库。
 
+## ReleaseNotes
+
+### 1.0.1
+1. BoundedArrayDeque fix Count为0时SetCapacity导致的head下标错误。
+
 ## Collections
 
 但凡C#的基础集合库好用一点，我也不至于自己造轮子，实现的集合类：
