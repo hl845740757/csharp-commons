@@ -154,6 +154,21 @@ public static class CollectionUtil
         return true;
     }
 
+    /** 创建一个单元素的List */
+    public static List<T> NewList<T>(T first) {
+        return new List<T>(1) { first };
+    }
+
+    /** 创建2个单元素的List */
+    public static List<T> NewList<T>(T first, T second) {
+        return new List<T>(2) { first, second };
+    }
+
+    /** 创建3个单元素的List */
+    public static List<T> NewList<T>(T first, T second, T third) {
+        return new List<T>(3) { first, second, third };
+    }
+
     #endregion
 
     #region collection

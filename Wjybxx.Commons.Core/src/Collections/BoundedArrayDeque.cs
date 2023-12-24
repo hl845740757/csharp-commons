@@ -101,7 +101,6 @@ public class BoundedArrayDeque<T> : IDeque<T>
 
         int count = Count;
         T[] elements;
-        int head, tail;
         // 0
         if (capacity == 0) {
             if (count > 0
@@ -110,7 +109,6 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 throw new InvalidOperationException("capacity < Count");
             }
             elements = Array.Empty<T>();
-            head = tail = -1;
         }
         else if (capacity < count) {
             elements = overflowBehavior switch {
@@ -118,22 +116,25 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 DequeOverflowBehavior.DiscardTail => GetRange(0, capacity),
                 _ => throw new InvalidOperationException("capacity < Count")
             };
-            head = 0;
-            tail = capacity - 1;
         }
         else {
             elements = new T[capacity];
             CopyTo(elements, 0);
-            head = 0;
-            tail = count - 1;
         }
 
         if (ValueIsRefType) {
             Clear(); // help gc
         }
+
         _elements = elements;
-        _head = head;
-        _tail = tail;
+        count = Math.Min(count, capacity);
+        if (count > 0) {
+            _head = 0;
+            _tail = count - 1;
+        }
+        else {
+            _head = _tail = -1;
+        }
         _version++;
     }
 
