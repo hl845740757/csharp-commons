@@ -16,6 +16,9 @@
 
 #endregion
 
+using System;
+using System.Collections.Generic;
+
 namespace Wjybxx.Commons.Collections;
 
 /// <summary>

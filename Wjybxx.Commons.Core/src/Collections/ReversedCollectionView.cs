@@ -16,6 +16,9 @@
 
 #endregion
 
+using System;
+using System.Collections.Generic;
+
 #pragma warning disable CS1591
 namespace Wjybxx.Commons.Collections;
 
@@ -31,7 +34,7 @@ public class ReversedCollectionView<TKey> : ISequencedCollection<TKey>
         _delegated = delegated ?? throw new ArgumentNullException(nameof(delegated));
     }
 
-    public int Count => _delegated.Count();
+    public int Count => _delegated.Count;
     public bool IsReadOnly => false;
 
     public virtual ISequencedCollection<TKey> Reversed() {

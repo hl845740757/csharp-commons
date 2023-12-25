@@ -16,6 +16,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using static Wjybxx.Commons.MathCommon;
 

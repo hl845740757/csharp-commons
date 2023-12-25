@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
+        <ImplicitUsings>false</ImplicitUsings>
         <Nullable>annotations</Nullable>
         <LangVersion>10</LangVersion>
         <RootNamespace>Wjybxx.Commons</RootNamespace>
@@ -16,6 +16,7 @@
         <PackageTags>wjybxx;collections;LinkedDictionary;</PackageTags>
 
         <Authors>wjybxx(845740757@qq.com)</Authors>
+        <Owners>wjybxx(845740757@qq.com)</Owners>
         <Copyright>Copyright 2023 wjybxx(845740757@qq.com)</Copyright>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/hl845740757/csharp-commons</PackageProjectUrl>
@@ -25,9 +26,8 @@
         <NeutralLanguage>zh-Hans</NeutralLanguage>
 
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <EmbedAllSources>true</EmbedAllSources>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <!--        <SignAssembly>true</SignAssembly>-->
-        <!--        <AssemblyOriginatorKeyFile>Wjybxx.Commons.Core.snk</AssemblyOriginatorKeyFile>-->
     </PropertyGroup>
 
     <ItemGroup>
