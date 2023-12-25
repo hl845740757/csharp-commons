@@ -85,8 +85,9 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         _mask = HashCommon.ArraySize(expectedCount, loadFactor) - 1;
     }
 
-    public int Count => _count;
     public bool IsReadOnly => false;
+    public int Count => _count;
+    public bool IsEmpty => _count == 0;
 
     #region peek
 

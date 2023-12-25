@@ -68,7 +68,8 @@ public class MultiChunkDeque<T> : IDeque<T>
 
     public bool IsReadOnly => false;
     public int Count => _count;
-
+    public bool IsEmpty => _count == 0;
+    
     #region dequeue
 
     public T PeekFirst() {

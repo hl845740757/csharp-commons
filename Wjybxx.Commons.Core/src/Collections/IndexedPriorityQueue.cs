@@ -40,9 +40,9 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
         this._items = new T[initCapacity];
     }
 
-    public int Count => _count;
-
     public bool IsReadOnly => false;
+    public int Count => _count;
+    public bool IsEmpty => _count == 0;
 
     public void Clear() {
         for (var i = 0; i < _count; i++) {

@@ -36,6 +36,13 @@ public interface IGenericCollection<T> : ICollection<T>, IReadOnlyCollection<T>
     new int Count { get; }
 
     /// <summary>
+    /// 判断集合是否为空
+    /// 对于非并发集合而言，通过Count判断为空的开销可忽略；但对于并发集合，可能不能直接得到Count;
+    /// 在接口层提供IsEmpty对于并发集合是有利的。
+    /// </summary>
+    bool IsEmpty => Count == 0;
+
+    /// <summary>
     /// 调整空间
     /// 1.该接口以允许用户触发扩容，通常用于批量添加元素之前;
     /// 2.Hash结构通常有较大的辅助空间，该接口以允许用户触发收缩;

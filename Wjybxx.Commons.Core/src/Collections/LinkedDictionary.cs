@@ -96,8 +96,9 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         _mask = HashCommon.ArraySize(expectedCount, loadFactor) - 1;
     }
 
-    public int Count => _count;
     public bool IsReadOnly => false;
+    public int Count => _count;
+    public bool IsEmpty => _count == 0;
 
     /// <summary>
     /// 默认值会序列化
