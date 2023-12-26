@@ -5,7 +5,13 @@ csharp公共库，包含集合等基础组件;nuget搜索'wjybxx'即可查看到
 ## ReleaseNotes
 
 ### 1.0.1
+
 1. BoundedArrayDeque fix Count为0时SetCapacity导致的head下标错误。
+
+### 1.0.2
+
+1. Collection增加IsEmpty方法
+2. 增加少量DateTime工具方法
 
 ## Collections
 

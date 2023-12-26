@@ -58,11 +58,19 @@ public static class DatetimeUtil
     public static readonly TimeSpan ZoneOffsetSystem = TimeZoneInfo.Local.BaseUtcOffset;
 
     /// <summary>
-    /// 获取当前的Unix时间戳
+    /// 获取当前的Unix时间戳(毫秒)
     /// </summary>
     /// <returns></returns>
     public static long CurrentEpochMillis() {
         return (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
+    }
+
+    /// <summary>
+    /// 获取当前的Unix时间戳(秒)
+    /// </summary>
+    /// <returns></returns>
+    public static long CurrentEpochSeconds() {
+        return (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
     }
 
     /// <summary>
@@ -108,18 +116,5 @@ public static class DatetimeUtil
     /// <returns></returns>
     public static int LengthOfMonth(DateTime dateTime) {
         return DateTime.DaysInMonth(dateTime.Year, dateTime.Month);
-    }
-
-    /// <summary>
-    /// 获取给定日期时间的月末一天
-    /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
-    public static DateTime EndOfMonth(DateTime dateTime) {
-        int daysInMonth = DateTime.DaysInMonth(dateTime.Year, dateTime.Month);
-        if (dateTime.Day == daysInMonth) {
-            return dateTime;
-        }
-        return new DateTime(dateTime.Year, dateTime.Month, daysInMonth);
     }
 }
