@@ -26,6 +26,24 @@ namespace Wjybxx.Commons.Collections;
 /// </summary>
 public static class CollectionUtil
 {
+    /** 元素不存在时的索引 */
+    public const int IndexNotFound = -1;
+
+    /// <summary>
+    /// 计算hash结构的空间
+    /// </summary>
+    /// <param name="expectedCount">期望的元素数量</param>
+    /// <returns></returns>
+    public static int Capacity(int expectedCount) {
+        if (expectedCount < 3) {
+            return 4;
+        }
+        if (expectedCount < MathCommon.MaxPowerOfTwo) {
+            return (int)(expectedCount / 0.75F + 1.0F);
+        }
+        return int.MaxValue;
+    }
+    
     /** behavior是否允许丢弃队列的首部 */
     public static bool AllowDiscardHead(this DequeOverflowBehavior behavior) {
         return behavior == DequeOverflowBehavior.CircleBuffer
@@ -58,15 +76,18 @@ public static class CollectionUtil
     }
 
     /** 查对象引用在数组中的下标 */
-    public static int IndexOfRef<T>(T?[] list, object? element) where T : class {
+    public static int IndexOfRef<T>(T?[] list, object? element, int startIndex = 0) where T : class {
+        if (startIndex < 0) {
+            startIndex = 0;
+        }
         if (element == null) {
-            for (int idx = 0, size = list.Length; idx < size; idx++) {
+            for (int idx = startIndex, size = list.Length; idx < size; idx++) {
                 if (list[idx] == null) {
                     return idx;
                 }
             }
         } else {
-            for (int idx = 0, size = list.Length; idx < size; idx++) {
+            for (int idx = startIndex, size = list.Length; idx < size; idx++) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
                 }
@@ -76,15 +97,21 @@ public static class CollectionUtil
     }
 
     /** 查对象引用在数组中的下标 */
-    public static int LastIndexOfRef<T>(T?[] list, object? element) where T : class {
+    public static int LastIndexOfRef<T>(T?[] list, object? element, int? startIndex = null) where T : class {
+        int sindex;
+        if (startIndex.HasValue) {
+            sindex = Math.Min(list.Length, startIndex.Value);
+        } else {
+            sindex = list.Length - 1;
+        }
         if (element == null) {
-            for (int idx = list.Length - 1; idx >= 0; idx--) {
+            for (int idx = sindex; idx >= 0; idx--) {
                 if (list[idx] == null) {
                     return idx;
                 }
             }
         } else {
-            for (int idx = list.Length - 1; idx >= 0; idx--) {
+            for (int idx = sindex; idx >= 0; idx--) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
                 }
@@ -103,15 +130,18 @@ public static class CollectionUtil
     #region list
 
     /** 查对象引用在数组中的下标 */
-    public static int IndexOfRef<T>(IList<T?> list, object? element) where T : class {
+    public static int IndexOfRef<T>(IList<T?> list, object? element, int startIndex = 0) where T : class {
+        if (startIndex < 0) {
+            startIndex = 0;
+        }
         if (element == null) {
-            for (int idx = 0, size = list.Count; idx < size; idx++) {
+            for (int idx = startIndex, size = list.Count; idx < size; idx++) {
                 if (list[idx] == null) {
                     return idx;
                 }
             }
         } else {
-            for (int idx = 0, size = list.Count; idx < size; idx++) {
+            for (int idx = startIndex, size = list.Count; idx < size; idx++) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
                 }
@@ -121,15 +151,21 @@ public static class CollectionUtil
     }
 
     /** 查对象引用在数组中的下标 */
-    public static int LastIndexOfRef<T>(IList<T?> list, object? element) where T : class {
+    public static int LastIndexOfRef<T>(IList<T?> list, object? element, int? startIndex = null) where T : class {
+        int sindex;
+        if (startIndex.HasValue) {
+            sindex = Math.Min(list.Count, startIndex.Value);
+        } else {
+            sindex = list.Count - 1;
+        }
         if (element == null) {
-            for (int idx = list.Count - 1; idx >= 0; idx--) {
+            for (int idx = sindex; idx >= 0; idx--) {
                 if (list[idx] == null) {
                     return idx;
                 }
             }
         } else {
-            for (int idx = list.Count - 1; idx >= 0; idx--) {
+            for (int idx = sindex; idx >= 0; idx--) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
                 }

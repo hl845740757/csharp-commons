@@ -29,6 +29,9 @@ public static class MathCommon
 {
     #region power2
 
+    public const int MaxPowerOfTwo = 1 << 30;
+    public const long LongMaxPowerOfTwo = 1L << 62;
+
     /** 判断一个数是否是2的整次幂 */
     public static bool IsPowerOfTwo(int x) {
         return x > 0 && (x & (x - 1)) == 0;
