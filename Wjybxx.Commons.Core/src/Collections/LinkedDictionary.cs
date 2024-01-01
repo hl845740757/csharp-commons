@@ -220,8 +220,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                 }
             }
             return false;
-        }
-        else {
+        } else {
             IEqualityComparer<TValue>? valComparer = ValComparer;
             for (Node e = _head; e != null; e = e._next) {
                 if (valComparer.Equals(e._value, value)) {
@@ -513,8 +512,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
         if (_table == null) {
             _mask = arraySize - 1;
-        }
-        else {
+        } else {
             Rehash(arraySize);
         }
     }
@@ -535,8 +533,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             for (Node e = _tail; e != null; e = e._prev) {
                 array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
             }
-        }
-        else {
+        } else {
             for (Node e = _head; e != null; e = e._next) {
                 array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
             }
@@ -551,8 +548,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             for (Node e = _tail; e != null; e = e._prev) {
                 array[arrayIndex++] = e._key;
             }
-        }
-        else {
+        } else {
             for (Node e = _head; e != null; e = e._next) {
                 array[arrayIndex++] = e._key;
             }
@@ -567,8 +563,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             for (Node e = _tail; e != null; e = e._prev) {
                 array[arrayIndex++] = e._value;
             }
-        }
-        else {
+        } else {
             for (Node e = _head; e != null; e = e._next) {
                 array[arrayIndex++] = e._value;
             }
@@ -692,8 +687,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             existNode._value = value;
             if (behavior == PutBehavior.MoveToLast) {
                 MoveToLast(existNode);
-            }
-            else if (behavior == PutBehavior.MoveToFirst) {
+            } else if (behavior == PutBehavior.MoveToFirst) {
                 MoveToFirst(existNode);
             }
             return result;
@@ -719,13 +713,11 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         Node node = new Node(hash, key, value, pos);
         if (_count == 0) {
             _head = _tail = node;
-        }
-        else if (order == InsertionOrder.Head) {
+        } else if (order == InsertionOrder.Head) {
             node._next = _head;
             _head!._prev = node;
             _head = node;
-        }
-        else {
+        } else {
             node._prev = _tail;
             _tail!._next = node;
             _tail = node;
@@ -757,8 +749,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             }
             if (node._key == null) {
                 pos = mask + 1;
-            }
-            else {
+            } else {
                 pos = node._hash & mask;
                 while (newTable[pos] != null) {
                     pos = (pos + 1) & mask;
@@ -839,16 +830,13 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     private void FixPointers(Node node) {
         if (_count == 0) {
             _head = _tail = null;
-        }
-        else if (node == _head) {
+        } else if (node == _head) {
             _head = node._next!;
             _head._prev = null;
-        }
-        else if (node == _tail) {
+        } else if (node == _tail) {
             _tail = node._prev!;
             _tail._next = null;
-        }
-        else {
+        } else {
             // 删除的是中间元素
             Node prev = node._prev!;
             Node next = node._next!;
@@ -864,8 +852,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (node == _tail) {
             _tail = node._prev!;
             _tail._next = null;
-        }
-        else {
+        } else {
             var prev = node._prev!;
             var next = node._next!;
             prev._next = next;
@@ -883,8 +870,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (node == _head) {
             _head = node._next!;
             _head._prev = null;
-        }
-        else {
+        } else {
             var prev = node._prev!;
             var next = node._next!;
             prev._next = next;

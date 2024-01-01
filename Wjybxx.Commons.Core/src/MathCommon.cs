@@ -16,6 +16,8 @@
 
 #endregion
 
+using System.Runtime.CompilerServices;
+
 namespace Wjybxx.Commons;
 
 /// <summary>
@@ -65,6 +67,7 @@ public static class MathCommon
     #endregion
 
     /** 将value约束到[0, 1]范围 */
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Clamp01(float value) {
         if (value <= 0f) return 0f;
         if (value >= 1f) return 1f;
@@ -72,6 +75,7 @@ public static class MathCommon
     }
 
     /** 将value约束到[0, 1]范围 */
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static double Clamp01(double value) {
         if (value <= 0d) return 0d;
         if (value >= 1d) return 1d;

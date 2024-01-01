@@ -48,7 +48,7 @@ public interface ISequencedDictionary<TKey, TValue> : IGenericDictionary<TKey, T
     /// 获取字典的Key集合
     /// </summary>
     new ISequencedCollection<TKey> Keys { get; }
-    
+
     /// <summary>
     /// 获取字典的Value集合
     /// </summary>

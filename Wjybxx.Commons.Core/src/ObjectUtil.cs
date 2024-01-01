@@ -17,6 +17,8 @@
 #endregion
 
 using System;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Wjybxx.Commons;
 
@@ -29,6 +31,7 @@ public static class ObjectUtil
     /// 如果参数为null，则抛出异常
     /// </summary>
     /// <exception cref="ArgumentNullException"></exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T RequireNonNull<T>(T obj, string? message = null) {
         if (obj == null) throw new ArgumentNullException(nameof(obj), message);
         return obj;
@@ -37,8 +40,19 @@ public static class ObjectUtil
     /// <summary>
     /// 如果参数为null，则转为给定的默认值
     /// </summary>
-    public static T NullToDef<T>(T obj, T def) {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T NullToDef<T>(T? obj, T? def) {
         return obj == null ? def : obj;
+    }
+
+    /// <summary>
+    /// 获取字符串的长度，如果字符为null，则返回0
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Length(string? value) {
+        return value?.Length ?? 0;
     }
 
     /// <summary>
@@ -47,6 +61,7 @@ public static class ObjectUtil
     /// <param name="value">value</param>
     /// <param name="def">默认值</param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string EmptyToDef(string value, string def) {
         return string.IsNullOrEmpty(value) ? def : value;
     }
@@ -57,7 +72,64 @@ public static class ObjectUtil
     /// <param name="value">value</param>
     /// <param name="def">默认值</param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string BlankToDef(string value, string def) {
         return string.IsNullOrWhiteSpace(value) ? def : value;
+    }
+
+    /// <summary>
+    /// 首字母大写
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static string FirstCharToUpperCase(string str) {
+        int length = Length(str);
+        if (length == 0) {
+            return str;
+        }
+        char firstChar = str[0];
+        if (char.IsLower(firstChar)) { // 可拦截非英文字符
+            StringBuilder sb = new StringBuilder(str);
+            sb[0] = char.ToUpper(firstChar);
+            return sb.ToString();
+        }
+        return str;
+    }
+
+    /// <summary>
+    /// 首字母小写
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static string FirstCharToLowerCase(string str) {
+        int length = Length(str);
+        if (length == 0) {
+            return str;
+        }
+        char firstChar = str[0];
+        if (char.IsUpper(firstChar)) { // 可拦截非英文字符
+            StringBuilder sb = new StringBuilder(str);
+            sb[0] = char.ToLower(firstChar);
+            return sb.ToString();
+        }
+        return str;
+    }
+
+    /// <summary>
+    /// 字符串是否包含空白字符
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static bool ContainsWhitespace(string str) {
+        int strLen = Length(str);
+        if (strLen == 0) {
+            return false;
+        }
+        for (int i = 0; i < strLen; i++) {
+            if (char.IsWhiteSpace(str[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

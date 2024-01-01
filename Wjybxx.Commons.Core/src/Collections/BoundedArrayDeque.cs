@@ -111,15 +111,14 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 throw new InvalidOperationException("capacity < Count");
             }
             elements = Array.Empty<T>();
-        }
-        else if (capacity < count) {
-            elements = overflowBehavior switch {
+        } else if (capacity < count) {
+            elements = overflowBehavior switch
+            {
                 DequeOverflowBehavior.DiscardHead => GetRange((count - capacity), capacity),
                 DequeOverflowBehavior.DiscardTail => GetRange(0, capacity),
                 _ => throw new InvalidOperationException("capacity < Count")
             };
-        }
-        else {
+        } else {
             elements = new T[capacity];
             CopyTo(elements, 0);
         }
@@ -133,8 +132,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         if (count > 0) {
             _head = 0;
             _tail = count - 1;
-        }
-        else {
+        } else {
             _head = _tail = -1;
         }
         _version++;
@@ -220,8 +218,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
             }
             elements[head] = item;
             _head = head;
-        }
-        else {
+        } else {
             elements[0] = item;
             _head = _tail = 0;
         }
@@ -242,8 +239,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
             }
             elements[tail] = item;
             _tail = tail;
-        }
-        else {
+        } else {
             elements[0] = item;
             _head = _tail = 0;
         }
@@ -276,8 +272,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         elements[head] = default;
         if (head == _tail) {
             _head = _tail = -1;
-        }
-        else {
+        } else {
             _head = Inc(head, elements.Length);
         }
         _version++;
@@ -295,8 +290,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         elements[tail] = default;
         if (tail == _head) {
             _head = _tail = -1;
-        }
-        else {
+        } else {
             _tail = Dec(tail, elements.Length);
         }
         _version++;
@@ -323,8 +317,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         int tail = _tail;
         if (head <= tail) {
             Array.Fill(_elements, default, head, (tail - head + 1));
-        }
-        else {
+        } else {
             Array.Fill(_elements, default, 0, tail + 1);
             Array.Fill(_elements, default, head, _elements.Length - head);
         }
@@ -348,15 +341,12 @@ public class BoundedArrayDeque<T> : IDeque<T>
         if (head < tail) { // 哪边元素少拷贝哪边
             if (index - head >= tail - index) {
                 MoveFront(elements, index, tail);
-            }
-            else {
+            } else {
                 MoveBack(elements, index, head);
             }
-        }
-        else if (index < tail) { // [0, tail - 1]，向前拷贝
+        } else if (index < tail) { // [0, tail - 1]，向前拷贝
             MoveFront(elements, index, tail);
-        }
-        else { // [head + 1, length-1]，向后拷贝
+        } else { // [head + 1, length-1]，向后拷贝
             Debug.Assert(index > _head);
             MoveBack(elements, index, head);
         }
@@ -390,8 +380,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 }
             }
             return -1;
-        }
-        else {
+        } else {
             for (int i = head; i < _elements.Length; i++) {
                 if (comparer.Equals(item, _elements[i])) {
                     return i;
@@ -493,8 +482,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 for (int i = tail; i >= head; i--) {
                     array[arrayIndex++] = elements[i];
                 }
-            }
-            else {
+            } else {
                 for (int i = tail; i >= 0; i--) {
                     array[arrayIndex++] = elements[i];
                 }
@@ -502,12 +490,10 @@ public class BoundedArrayDeque<T> : IDeque<T>
                     array[arrayIndex++] = elements[i];
                 }
             }
-        }
-        else {
+        } else {
             if (head <= tail) {
                 Array.Copy(elements, head, array, arrayIndex, (tail - head + 1));
-            }
-            else {
+            } else {
                 int headLen = (elements.Length - head);
                 Array.Copy(elements, head, array, arrayIndex, headLen);
                 Array.Copy(elements, 0, array, arrayIndex + headLen, (_tail + 1));
@@ -537,8 +523,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
         if (start > _tail && length > headLen) { // 需要拷贝两部分
             Array.Copy(elements, start, result, 0, headLen);
             Array.Copy(elements, 0, result, headLen, length - headLen);
-        }
-        else {
+        } else {
             Array.Copy(elements, start, result, 0, length);
         }
         return result;
@@ -589,8 +574,7 @@ public class BoundedArrayDeque<T> : IDeque<T>
                 if (_cursor == _arrayDeque._tail) {
                     _cursor = -1;
                 }
-            }
-            else {
+            } else {
                 _cursor = Inc(_cursor, _arrayDeque._elements.Length);
                 if (_cursor == _arrayDeque._head) {
                     _cursor = -1;

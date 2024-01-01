@@ -146,14 +146,12 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
 
         if (idx == 0) {
             BubbleDown(idx, node);
-        }
-        else {
+        } else {
             int iParent = (idx - 1) >> 1;
             T parent = _items[iParent];
             if (_comparator.Compare(node, parent) < 0) {
                 BubbleUp(idx, node);
-            }
-            else {
+            } else {
                 BubbleDown(idx, node);
             }
         }
@@ -170,8 +168,7 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
             if (-delta >= 8) {
                 Resize(expectedCount);
             }
-        }
-        else {
+        } else {
             // 避免过小的扩容
             if (delta < 4) {
                 delta = 4;
@@ -231,8 +228,7 @@ public class IndexedPriorityQueue<T> : IIndexedPriorityQueue<T> where T : class,
 
         if (idx == 0 || _comparator.Compare(item, moved) < 0) {
             BubbleDown(idx, moved);
-        }
-        else {
+        } else {
             BubbleUp(idx, moved);
         }
     }

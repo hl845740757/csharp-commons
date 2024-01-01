@@ -69,7 +69,7 @@ public class MultiChunkDeque<T> : IDeque<T>
     public bool IsReadOnly => false;
     public int Count => _count;
     public bool IsEmpty => _count == 0;
-    
+
     #region dequeue
 
     public T PeekFirst() {
@@ -128,8 +128,7 @@ public class MultiChunkDeque<T> : IDeque<T>
         Chunk headChunk = _headChunk;
         if (headChunk == null) {
             headChunk = _headChunk = _tailChunk = AllocChunk();
-        }
-        else if (headChunk.IsFull) {
+        } else if (headChunk.IsFull) {
             headChunk = AllocChunk();
             headChunk._next = _headChunk;
             _headChunk!._prev = headChunk;
@@ -144,8 +143,7 @@ public class MultiChunkDeque<T> : IDeque<T>
         Chunk tailChunk = _tailChunk;
         if (tailChunk == null) {
             tailChunk = _headChunk = _tailChunk = AllocChunk();
-        }
-        else if (tailChunk.IsFull) {
+        } else if (tailChunk.IsFull) {
             tailChunk = AllocChunk();
             tailChunk._prev = _tailChunk;
             _tailChunk!._next = tailChunk;
@@ -240,16 +238,13 @@ public class MultiChunkDeque<T> : IDeque<T>
         if (_headChunk == _tailChunk) {
             Debug.Assert(chunk == _headChunk);
             _headChunk = _tailChunk = null;
-        }
-        else if (chunk == _headChunk) {
+        } else if (chunk == _headChunk) {
             _headChunk = chunk._next;
             _headChunk!._prev = null;
-        }
-        else if (chunk == _tailChunk) {
+        } else if (chunk == _tailChunk) {
             _tailChunk = chunk._prev;
             _tailChunk!._next = null;
-        }
-        else {
+        } else {
             // 删除的是中间块
             Chunk prev = chunk._prev!;
             Chunk next = chunk._next!;
@@ -335,8 +330,7 @@ public class MultiChunkDeque<T> : IDeque<T>
                 chunk.CopyTo(array, arrayIndex, true);
                 arrayIndex += chunk.Count;
             }
-        }
-        else {
+        } else {
             for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
                 chunk.CopyTo(array, arrayIndex);
                 arrayIndex += chunk.Count;
@@ -363,8 +357,7 @@ public class MultiChunkDeque<T> : IDeque<T>
         Chunk chunk;
         if (_chunkPool.Count > 0) {
             chunk = _chunkPool.Pop();
-        }
-        else {
+        } else {
             chunk = new Chunk(_chunkSize);
         }
         return chunk;
@@ -422,12 +415,10 @@ public class MultiChunkDeque<T> : IDeque<T>
             if (_deque.Count == 0) {
                 this._chunk = null;
                 this._chunkItr = null;
-            }
-            else if (_reversed) {
+            } else if (_reversed) {
                 this._chunk = _deque._tailChunk;
                 this._chunkItr = _chunk!.GetReversedEnumerator();
-            }
-            else {
+            } else {
                 this._chunk = _deque._headChunk;
                 this._chunkItr = _chunk!.GetEnumerator();
             }

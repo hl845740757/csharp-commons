@@ -65,8 +65,7 @@ public static class CollectionUtil
                     return idx;
                 }
             }
-        }
-        else {
+        } else {
             for (int idx = 0, size = list.Length; idx < size; idx++) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
@@ -84,8 +83,7 @@ public static class CollectionUtil
                     return idx;
                 }
             }
-        }
-        else {
+        } else {
             for (int idx = list.Length - 1; idx >= 0; idx--) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
@@ -112,8 +110,7 @@ public static class CollectionUtil
                     return idx;
                 }
             }
-        }
-        else {
+        } else {
             for (int idx = 0, size = list.Count; idx < size; idx++) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
@@ -131,8 +128,7 @@ public static class CollectionUtil
                     return idx;
                 }
             }
-        }
-        else {
+        } else {
             for (int idx = list.Count - 1; idx >= 0; idx--) {
                 if (ReferenceEquals(list[idx], element)) {
                     return idx;
@@ -235,8 +231,7 @@ public static class CollectionUtil
                     unsafeItr.Remove();
                 }
             }
-        }
-        else {
+        } else {
             List<T> needRemoveKeys = new List<T>();
             while (itr.MoveNext()) {
                 if (!retainItems.Contains(itr.Current)) {

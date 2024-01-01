@@ -156,8 +156,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (collection is ICollection<TKey> c) {
             if (_loadFactor <= 0.5f) {
                 EnsureCapacity(c.Count); // 负载小于0.5，数组的长度将大于等于count的2倍，就能放下所有元素
-            }
-            else {
+            } else {
                 TryCapacity(_count + c.Count);
             }
         }
@@ -309,8 +308,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         }
         if (_table == null) {
             _mask = arraySize - 1;
-        }
-        else {
+        } else {
             Rehash(arraySize);
         }
     }
@@ -331,8 +329,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             for (Node e = _tail; e != null; e = e._prev) {
                 array[arrayIndex++] = e._key;
             }
-        }
-        else {
+        } else {
             for (Node e = _head; e != null; e = e._next) {
                 array[arrayIndex++] = e._key;
             }
@@ -454,8 +451,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             Node existNode = _table![pos]!;
             if (behavior == PutBehavior.MoveToLast) {
                 MoveToLast(existNode);
-            }
-            else if (behavior == PutBehavior.MoveToFirst) {
+            } else if (behavior == PutBehavior.MoveToFirst) {
                 MoveToFirst(existNode);
             }
             return false;
@@ -481,13 +477,11 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         Node node = new Node(hash, key, pos);
         if (_count == 0) {
             _head = _tail = node;
-        }
-        else if (order == InsertionOrder.Head) {
+        } else if (order == InsertionOrder.Head) {
             node._next = _head;
             _head!._prev = node;
             _head = node;
-        }
-        else {
+        } else {
             node._prev = _tail;
             _tail!._next = node;
             _tail = node;
@@ -519,8 +513,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             }
             if (node._key == null) {
                 pos = mask + 1;
-            }
-            else {
+            } else {
                 pos = node._hash & mask;
                 while (newTable[pos] != null) {
                     pos = (pos + 1) & mask;
@@ -601,16 +594,13 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
     private void FixPointers(Node node) {
         if (_count == 0) {
             _head = _tail = null;
-        }
-        else if (node == _head) {
+        } else if (node == _head) {
             _head = node._next!;
             _head._prev = null;
-        }
-        else if (node == _tail) {
+        } else if (node == _tail) {
             _tail = node._prev!;
             _tail._next = null;
-        }
-        else {
+        } else {
             // 删除的是中间元素
             Node prev = node._prev!;
             Node next = node._next!;
@@ -626,8 +616,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (node == _tail) {
             _tail = node._prev!;
             _tail._next = null;
-        }
-        else {
+        } else {
             var prev = node._prev!;
             var next = node._next!;
             prev._next = next;
@@ -645,8 +634,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (node == _head) {
             _head = node._next!;
             _head._prev = null;
-        }
-        else {
+        } else {
             var prev = node._prev!;
             var next = node._next!;
             prev._next = next;
