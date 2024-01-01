@@ -19,16 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Wjybxx.Commons.Ex;
 
-namespace Wjybxx.Commons;
+namespace Wjybxx.Commons.Time;
 
 /// <summary>
 /// 停表
 ///
 /// 使用方式如下：
 /// <code>
-///  public void execute() {
+///  public void Execute() {
 ///      // 创建一个已启动的计时器
 ///      final StopWatch stopWatch = StopWatch.CreateStarted("execute");
 ///
@@ -45,7 +44,7 @@ namespace Wjybxx.Commons;
 ///      stopWatch.LogStep("step4");
 ///
 ///      // 输出日志
-///      logger.info(stopWatch.GetLog());
+///      logger.Info(stopWatch.GetLog());
 ///  }
 /// </code>
 /// 
@@ -208,14 +207,10 @@ public sealed class StopWatch
     // region 获取耗时
 
     /** 获取开始到现在消耗的总时间 */
-    public TimeSpan Elapsed() {
-        return TimeSpan.FromTicks(ElapsedNanos());
-    }
+    public TimeSpan Elapsed => TimeSpan.FromTicks(ElapsedNanos());
 
     /** 获取当前步骤已消耗的时间 */
-    public TimeSpan StepElapsed() {
-        return TimeSpan.FromTicks(StepElapsedNanos());
-    }
+    public TimeSpan StepElapsed => TimeSpan.FromTicks(StepElapsedNanos());
 
     /** 获取当前已有的步骤耗时信息 */
     public List<KeyValuePair<string, TimeSpan>> ListStepElapsed() {

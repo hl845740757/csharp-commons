@@ -34,13 +34,13 @@ public interface IObjectPool<T> where T : class
     T Rent();
 
     /// <summary>
-    /// 将对象放入缓存池 - 重置策略却决于<see cref="ResetPolicy{T}"/>
+    /// 将对象放入缓存池
     /// </summary>
     /// <param name="obj"></param>
     void ReturnOne(T obj);
 
     /// <summary>
-    /// 将对象放入缓存池 - 重置策略却决于<see cref="ResetPolicy{T}"/>
+    /// 将对象放入缓存池
     /// </summary>
     /// <param name="objects"></param>
     void ReturnAll(Collection<T?> objects) {

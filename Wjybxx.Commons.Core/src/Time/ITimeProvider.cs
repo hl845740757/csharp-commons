@@ -16,15 +16,29 @@
 
 #endregion
 
-namespace Wjybxx.Commons;
+namespace Wjybxx.Commons.Time;
 
 /// <summary>
-/// 大小写模式
+/// 时间提供者
 /// </summary>
-public enum CaseMode : byte
+public interface ITimeProvider
 {
-    /** 大写 */
-    UpperCase = 1,
-    /** 小写 */
-    LowerCase = 2,
+    /// <summary>
+    /// 获取当前时间
+    /// </summary>
+    /// <returns></returns>
+    long Current { get; }
+}
+
+/// <summary>
+/// 该接口表示实现类是基于缓存时间戳的，需要外部定时去更新
+/// 线程安全性取决于实现类
+/// </summary>
+public interface ICachedTimeProvider : ITimeProvider
+{
+    /// <summary>
+    /// 设置当前时间戳
+    /// </summary>
+    /// <param name="time"></param>
+    void SetCurrent(long time);
 }

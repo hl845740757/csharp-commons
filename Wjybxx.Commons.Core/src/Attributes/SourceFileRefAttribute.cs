@@ -16,15 +16,13 @@
 
 #endregion
 
-namespace Wjybxx.Commons;
+using System;
+
+namespace Wjybxx.Commons.Attributes;
 
 /// <summary>
-/// 大小写模式
+/// 用于标注关联的原始类文件
 /// </summary>
-public enum CaseMode : byte
+public class SourceFileRefAttribute : Attribute
 {
-    /** 大写 */
-    UpperCase = 1,
-    /** 小写 */
-    LowerCase = 2,
 }

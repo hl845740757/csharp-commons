@@ -16,15 +16,23 @@
 
 #endregion
 
-namespace Wjybxx.Commons;
+using System;
+
+#pragma warning disable CS1591
+namespace Wjybxx.Commons.Attributes;
 
 /// <summary>
-/// 大小写模式
+/// 用于配置元素的优先级
 /// </summary>
-public enum CaseMode : byte
+[AttributeUsage(AttributeTargets.All)]
+public class PriorityAttribute : Attribute
 {
-    /** 大写 */
-    UpperCase = 1,
-    /** 小写 */
-    LowerCase = 2,
+    /// <summary>
+    /// 优先级
+    /// </summary>
+    public readonly int Value;
+
+    public PriorityAttribute(int value) {
+        this.Value = value;
+    }
 }

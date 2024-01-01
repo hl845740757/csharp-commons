@@ -20,7 +20,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Wjybxx.Commons.Ex;
 
 namespace Wjybxx.Commons;
 
@@ -51,6 +50,7 @@ public static class ObjectUtil
     /// 获取系统的tick数
     /// </summary>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static long SystemTicks() => Stopwatch.GetTimestamp();
 
     #region string

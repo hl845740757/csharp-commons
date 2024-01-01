@@ -21,7 +21,7 @@ using System;
 namespace Wjybxx.Commons.Attributes;
 
 /// <summary>
-/// 该注解用于为字段和方法等定义别名
+/// 该属性用于为字段和方法等定义别名
 /// </summary>
 [AttributeUsage(AttributeTargets.All)]
 public class AliasAttribute : Attribute

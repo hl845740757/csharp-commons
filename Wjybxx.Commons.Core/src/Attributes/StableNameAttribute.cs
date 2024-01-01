@@ -16,15 +16,14 @@
 
 #endregion
 
-namespace Wjybxx.Commons;
+using System;
+
+namespace Wjybxx.Commons.Attributes;
 
 /// <summary>
-/// 大小写模式
+/// 该属性表示被标记的元素的名字是稳定的，不可以随意更改
 /// </summary>
-public enum CaseMode : byte
+[AttributeUsage(AttributeTargets.All)]
+public class StableNameAttribute : Attribute
 {
-    /** 大写 */
-    UpperCase = 1,
-    /** 小写 */
-    LowerCase = 2,
 }
