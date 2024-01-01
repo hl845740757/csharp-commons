@@ -130,8 +130,8 @@ public class MultiChunkDeque<T> : IDeque<T>
             headChunk = _headChunk = _tailChunk = AllocChunk();
         } else if (headChunk.IsFull) {
             headChunk = AllocChunk();
-            headChunk._next = _headChunk;
-            _headChunk!._prev = headChunk;
+            headChunk.next = _headChunk;
+            _headChunk!.prev = headChunk;
             _headChunk = headChunk;
         }
         headChunk.AddFirst(item);
@@ -145,8 +145,8 @@ public class MultiChunkDeque<T> : IDeque<T>
             tailChunk = _headChunk = _tailChunk = AllocChunk();
         } else if (tailChunk.IsFull) {
             tailChunk = AllocChunk();
-            tailChunk._prev = _tailChunk;
-            _tailChunk!._next = tailChunk;
+            tailChunk.prev = _tailChunk;
+            _tailChunk!.next = tailChunk;
             _tailChunk = tailChunk;
         }
         tailChunk.AddLast(item);
@@ -188,7 +188,7 @@ public class MultiChunkDeque<T> : IDeque<T>
 
     /** 性能差，不建议使用 */
     public bool Contains(T item) {
-        for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
+        for (Chunk chunk = _headChunk; chunk != null; chunk = chunk.next) {
             if (chunk.Contains(item)) {
                 return true;
             }
@@ -198,7 +198,7 @@ public class MultiChunkDeque<T> : IDeque<T>
 
     /** 性能差，不建议使用 */
     public bool Remove(T item) {
-        for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
+        for (Chunk chunk = _headChunk; chunk != null; chunk = chunk.next) {
             if (!chunk.Remove(item)) {
                 continue;
             }
@@ -218,7 +218,7 @@ public class MultiChunkDeque<T> : IDeque<T>
         }
         // 回收所有chunk
         for (Chunk chunk = _headChunk; chunk != null;) {
-            Chunk nextChunk = chunk._next; // Release会清理引用，先暂存下来
+            Chunk nextChunk = chunk.next; // Release会清理引用，先暂存下来
             ReleaseChunk(chunk);
             chunk = nextChunk;
         }
@@ -239,17 +239,17 @@ public class MultiChunkDeque<T> : IDeque<T>
             Debug.Assert(chunk == _headChunk);
             _headChunk = _tailChunk = null;
         } else if (chunk == _headChunk) {
-            _headChunk = chunk._next;
-            _headChunk!._prev = null;
+            _headChunk = chunk.next;
+            _headChunk!.prev = null;
         } else if (chunk == _tailChunk) {
-            _tailChunk = chunk._prev;
-            _tailChunk!._next = null;
+            _tailChunk = chunk.prev;
+            _tailChunk!.next = null;
         } else {
             // 删除的是中间块
-            Chunk prev = chunk._prev!;
-            Chunk next = chunk._next!;
-            prev._next = next;
-            next._prev = prev;
+            Chunk prev = chunk.prev!;
+            Chunk next = chunk.next!;
+            prev.next = next;
+            next.prev = prev;
         }
     }
 
@@ -326,12 +326,12 @@ public class MultiChunkDeque<T> : IDeque<T>
         if (array.Length - arrayIndex < Count) throw new ArgumentException("Array is too small");
 
         if (reversed) {
-            for (Chunk chunk = _tailChunk; chunk != null; chunk = chunk._prev) {
+            for (Chunk chunk = _tailChunk; chunk != null; chunk = chunk.prev) {
                 chunk.CopyTo(array, arrayIndex, true);
                 arrayIndex += chunk.Count;
             }
         } else {
-            for (Chunk chunk = _headChunk; chunk != null; chunk = chunk._next) {
+            for (Chunk chunk = _headChunk; chunk != null; chunk = chunk.next) {
                 chunk.CopyTo(array, arrayIndex);
                 arrayIndex += chunk.Count;
             }
@@ -388,8 +388,8 @@ public class MultiChunkDeque<T> : IDeque<T>
             }
             if (_reversed) {
                 // 可能是个空块
-                while (_chunk!._prev != null) {
-                    _chunk = _chunk._prev;
+                while (_chunk!.prev != null) {
+                    _chunk = _chunk.prev;
                     _chunkItr = _chunk.GetReversedEnumerator();
                     if (_chunkItr.MoveNext()) {
                         return true;
@@ -399,8 +399,8 @@ public class MultiChunkDeque<T> : IDeque<T>
                 this._chunkItr = null;
                 return false;
             }
-            while (_chunk!._next != null) {
-                _chunk = _chunk._next;
+            while (_chunk!.next != null) {
+                _chunk = _chunk.next;
                 _chunkItr = _chunk.GetEnumerator();
                 if (_chunkItr.MoveNext()) {
                     return true;
@@ -434,8 +434,8 @@ public class MultiChunkDeque<T> : IDeque<T>
     /** 每一个Chunk是一个有界环形队列 */
     private class Chunk : BoundedArrayDeque<T>
     {
-        internal Chunk? _prev;
-        internal Chunk? _next;
+        internal Chunk? prev;
+        internal Chunk? next;
 
         public Chunk(int length) : base(length) {
         }
@@ -443,8 +443,8 @@ public class MultiChunkDeque<T> : IDeque<T>
         public void Reset() {
             Clear();
             // chunkIndex不立即重置，而是重用时分配
-            _prev = null;
-            _next = null;
+            prev = null;
+            next = null;
         }
     }
 }

@@ -93,7 +93,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     public TKey PeekFirst() {
         if (_head == null) throw CollectionUtil.CollectionEmptyException();
-        return _head._key;
+        return _head.key;
     }
 
     public bool TryPeekFirst(out TKey key) {
@@ -101,13 +101,13 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             key = default;
             return false;
         }
-        key = _head._key;
+        key = _head.key;
         return true;
     }
 
     public TKey PeekLast() {
         if (_tail == null) throw CollectionUtil.CollectionEmptyException();
-        return _tail._key;
+        return _tail.key;
     }
 
     public bool TryPeekLast(out TKey key) {
@@ -115,7 +115,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             key = default;
             return false;
         }
-        key = _tail._key;
+        key = _tail.key;
         return true;
     }
 
@@ -195,11 +195,11 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             return false;
         }
 
-        key = oldHead._key;
+        key = oldHead.key;
         _count--;
         _version++;
         FixPointers(oldHead);
-        ShiftKeys(oldHead._index);
+        ShiftKeys(oldHead.index);
         oldHead.AfterRemoved();
         return true;
     }
@@ -218,12 +218,12 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             key = default;
             return false;
         }
-        key = oldTail._key;
+        key = oldTail.key;
 
         _count--;
         _version++;
         FixPointers(oldTail);
-        ShiftKeys(oldTail._index);
+        ShiftKeys(oldTail.index);
         oldTail.AfterRemoved();
         return true;
     }
@@ -258,8 +258,8 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (node == null) {
             throw CollectionUtil.KeyNotFoundException(key);
         }
-        if (node._next != null) {
-            next = node._next._key;
+        if (node.next != null) {
+            next = node.next.key;
             return true;
         }
         next = default;
@@ -278,8 +278,8 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (node == null) {
             throw CollectionUtil.KeyNotFoundException(key);
         }
-        if (node._prev != null) {
-            prev = node._prev._key;
+        if (node.prev != null) {
+            prev = node.prev.key;
             return true;
         }
         prev = default;
@@ -326,12 +326,12 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
 
         if (reversed) {
-            for (Node e = _tail; e != null; e = e._prev) {
-                array[arrayIndex++] = e._key;
+            for (Node e = _tail; e != null; e = e.prev) {
+                array[arrayIndex++] = e.key;
             }
         } else {
-            for (Node e = _head; e != null; e = e._next) {
-                array[arrayIndex++] = e._key;
+            for (Node e = _head; e != null; e = e.next) {
+                array[arrayIndex++] = e.key;
             }
         }
     }
@@ -380,7 +380,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         int pos = mask & hash;
         Node node = table[pos];
         if (node == null) return -(pos + 1);
-        if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+        if (node.hash == hash && keyComparer.Equals(node.key, key)) {
             return pos;
         }
         // 线性探测
@@ -390,7 +390,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             pos = (pos + 1) & mask;
             node = table[pos];
             if (node == null) return -(pos + 1);
-            if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+            if (node.hash == hash && keyComparer.Equals(node.key, key)) {
                 return pos;
             }
         }
@@ -413,14 +413,14 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         int pos = mask & hash;
         Node node = table[pos];
         if (node == null) return null;
-        if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+        if (node.hash == hash && keyComparer.Equals(node.key, key)) {
             return node;
         }
         for (int i = 0; i < mask; i++) {
             pos = (pos + 1) & mask;
             node = table[pos];
             if (node == null) return null;
-            if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+            if (node.hash == hash && keyComparer.Equals(node.key, key)) {
                 return node;
             }
         }
@@ -478,12 +478,12 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (_count == 0) {
             _head = _tail = node;
         } else if (order == InsertionOrder.Head) {
-            node._next = _head;
-            _head!._prev = node;
+            node.next = _head;
+            _head!.prev = node;
             _head = node;
         } else {
-            node._prev = _tail;
-            _tail!._next = node;
+            node.prev = _tail;
+            _tail!.next = node;
             _tail = node;
         }
         _count++;
@@ -511,16 +511,16 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             if (node == null) {
                 continue;
             }
-            if (node._key == null) {
+            if (node.key == null) {
                 pos = mask + 1;
             } else {
-                pos = node._hash & mask;
+                pos = node.hash & mask;
                 while (newTable[pos] != null) {
                     pos = (pos + 1) & mask;
                 }
             }
             newTable[pos] = node;
-            node._index = pos;
+            node.index = pos;
             if (--remain == 0) {
                 break;
             }
@@ -548,7 +548,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         _count--;
         _version++;
         FixPointers(node);
-        ShiftKeys(node._index);
+        ShiftKeys(node.index);
         node.AfterRemoved(); // 可以考虑自动收缩空间
     }
 
@@ -577,12 +577,12 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
                     return;
                 }
                 // [slot   last .... pos   slot] slot是应该属于的位置，pos是实际的位置，slot在连续区间外则应该移动
-                slot = curr._hash & mask;
+                slot = curr.hash & mask;
                 if (last <= pos ? (last >= slot || slot > pos) : (last >= slot && slot > pos)) break;
                 pos = (pos + 1) & mask;
             }
             table[last] = curr;
-            curr._index = last;
+            curr.index = last;
         }
     }
 
@@ -595,17 +595,17 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         if (_count == 0) {
             _head = _tail = null;
         } else if (node == _head) {
-            _head = node._next!;
-            _head._prev = null;
+            _head = node.next!;
+            _head.prev = null;
         } else if (node == _tail) {
-            _tail = node._prev!;
-            _tail._next = null;
+            _tail = node.prev!;
+            _tail.next = null;
         } else {
             // 删除的是中间元素
-            Node prev = node._prev!;
-            Node next = node._next!;
-            prev._next = next;
-            next._prev = prev;
+            Node prev = node.prev!;
+            Node next = node.next!;
+            prev.next = next;
+            next.prev = prev;
         }
     }
 
@@ -614,16 +614,16 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             return;
         }
         if (node == _tail) {
-            _tail = node._prev!;
-            _tail._next = null;
+            _tail = node.prev!;
+            _tail.next = null;
         } else {
-            var prev = node._prev!;
-            var next = node._next!;
-            prev._next = next;
-            next._prev = prev;
+            var prev = node.prev!;
+            var next = node.next!;
+            prev.next = next;
+            next.prev = prev;
         }
-        node._next = _head;
-        _head!._prev = node;
+        node.next = _head;
+        _head!.prev = node;
         _head = node;
     }
 
@@ -632,16 +632,16 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             return;
         }
         if (node == _head) {
-            _head = node._next!;
-            _head._prev = null;
+            _head = node.next!;
+            _head.prev = null;
         } else {
-            var prev = node._prev!;
-            var next = node._next!;
-            prev._next = next;
-            next._prev = prev;
+            var prev = node.prev!;
+            var next = node.next!;
+            prev.next = next;
+            next.prev = prev;
         }
-        node._prev = _tail;
-        _tail!._next = node;
+        node.prev = _tail;
+        _tail!.next = node;
         _tail = node;
     }
 
@@ -686,9 +686,9 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
                 return false;
             }
             Node node = _currNode = _nextNode;
-            _nextNode = _reversed ? node._prev : node._next;
+            _nextNode = _reversed ? node.prev : node.next;
             // 其实这期间node的value可能变化，安全的话应该每次创建新的Pair，但c#系统库没这么干
-            _current = node._key;
+            _current = node.key;
             return true;
         }
 
@@ -696,7 +696,7 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             if (_version != _hashSet._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
-            if (_currNode == null || _currNode._index < 0) {
+            if (_currNode == null || _currNode.index < 0) {
                 throw new InvalidOperationException("AlreadyRemoved");
             }
             _hashSet.RemoveNode(_currNode);
@@ -721,35 +721,39 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         }
     }
 
+    #endregion
+
+    #region node
+
     private class Node
     {
         /** 由于Key的hash使用频率极高，缓存以减少求值开销 */
-        internal readonly int _hash;
-        internal readonly TKey? _key;
+        internal readonly int hash;
+        internal readonly TKey? key;
         /** 由于使用线性探测法，删除的元素不一定直接位于hash槽上，需要记录，以便快速删除；-1表示已删除 */
-        internal int _index;
+        internal int index;
 
-        internal Node? _prev;
-        internal Node? _next;
+        internal Node? prev;
+        internal Node? next;
 
         public Node(int hash, TKey? key, int index) {
-            _hash = hash;
-            _key = key;
-            _index = index;
+            this.hash = hash;
+            this.key = key;
+            this.index = index;
         }
 
         public void AfterRemoved() {
-            _index = -1;
-            _prev = null;
-            _next = null;
+            index = -1;
+            prev = null;
+            next = null;
         }
 
         public override int GetHashCode() {
-            return _hash; // 不使用value计算hash，因为value可能在中途变更
+            return hash; // 不使用value计算hash，因为value可能在中途变更
         }
 
         public override string ToString() {
-            return $"{nameof(_key)}: {_key}";
+            return $"{nameof(key)}: {key}";
         }
     }
 
@@ -757,35 +761,35 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     #region seril
 
-    private const string Names_Mask = "Mask";
-    private const string Names_LoadFactor = "LoadFactor";
-    private const string Names_Comparer = "Comparer";
-    private const string Names_Keys = "Keys";
+    private const string NAME_MASK = "Mask";
+    private const string NAMES_LOADFACTOR = "LoadFactor";
+    private const string NAMES_COMPARER = "Comparer";
+    private const string NAMES_KEYS = "Keys";
 
     public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
         if (info == null) throw new ArgumentNullException(nameof(info));
 
-        info.AddValue(Names_Mask, _mask);
-        info.AddValue(Names_LoadFactor, _loadFactor);
-        info.AddValue(Names_Comparer, _keyComparer, typeof(IEqualityComparer<TKey>));
+        info.AddValue(NAME_MASK, _mask);
+        info.AddValue(NAMES_LOADFACTOR, _loadFactor);
+        info.AddValue(NAMES_COMPARER, _keyComparer, typeof(IEqualityComparer<TKey>));
         if (_table != null && _count > 0) { // 有数据才序列化
             var array = new TKey[Count];
             CopyTo(array, 0, false);
-            info.AddValue(Names_Keys, array, typeof(TKey[]));
+            info.AddValue(NAMES_KEYS, array, typeof(TKey[]));
         }
     }
 
     protected LinkedHashSet(SerializationInfo info, StreamingContext context) {
-        _mask = info.GetInt32(Names_Mask);
-        _loadFactor = info.GetSingle(Names_LoadFactor);
-        _keyComparer = (IEqualityComparer<TKey>)info.GetValue(Names_Comparer, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
+        _mask = info.GetInt32(NAME_MASK);
+        _loadFactor = info.GetSingle(NAMES_LOADFACTOR);
+        _keyComparer = (IEqualityComparer<TKey>)info.GetValue(NAMES_COMPARER, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
 
         HashCommon.CheckLoadFactor(_loadFactor);
         if (_mask + 1 != MathCommon.NextPowerOfTwo(_mask)) {
             throw new Exception("invalid serial data, _mask: " + _mask);
         }
 
-        TKey[] keys = (TKey[])info.GetValue(Names_Keys, typeof(TKey[]));
+        TKey[] keys = (TKey[])info.GetValue(NAMES_KEYS, typeof(TKey[]));
         if (keys != null && keys.Length > 0) {
             BuildTable(keys);
         }
@@ -806,8 +810,8 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
             int hash = KeyHash(key, keyComparer);
             Node next = new Node(hash, key, -1);
             //
-            tail._next = next;
-            next._prev = tail;
+            tail.next = next;
+            next.prev = tail;
             tail = next;
         }
         _head = head;
@@ -816,8 +820,8 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
         // 散列到数组 -- 走正常的Find方法更安全些
         _table = new Node[_mask + 2];
         _count = keyArray.Length;
-        for (Node node = _head; node != null; node = node._next) {
-            int pos = Find(node._key, node._hash);
+        for (Node node = _head; node != null; node = node.next) {
+            int pos = Find(node.key, node.hash);
             if (pos >= 0) {
                 throw new SerializationException("invalid serial data");
             }

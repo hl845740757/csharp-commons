@@ -139,7 +139,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         get {
             Node? node = GetNode(key);
             if (node == null) throw CollectionUtil.KeyNotFoundException(key);
-            return node._value;
+            return node.value;
         }
         set => TryPut(key, value, PutBehavior.None);
     }
@@ -178,7 +178,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public TKey PeekFirstKey() {
         if (_head == null) throw CollectionUtil.CollectionEmptyException();
-        return _head._key;
+        return _head.key;
     }
 
     public bool TryPeekFirstKey(out TKey key) {
@@ -186,13 +186,13 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             key = default;
             return false;
         }
-        key = _head._key;
+        key = _head.key;
         return true;
     }
 
     public TKey PeekLastKey() {
         if (_tail == null) throw CollectionUtil.CollectionEmptyException();
-        return _tail._key;
+        return _tail.key;
     }
 
     public bool TryPeekLastKey(out TKey key) {
@@ -200,7 +200,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             key = default;
             return false;
         }
-        key = _tail._key;
+        key = _tail.key;
         return true;
     }
 
@@ -214,16 +214,16 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public bool ContainsValue(TValue value) {
         if (value == null) {
-            for (Node e = _head; e != null; e = e._next) {
-                if (e._value == null) {
+            for (Node e = _head; e != null; e = e.next) {
+                if (e.value == null) {
                     return true;
                 }
             }
             return false;
         } else {
             IEqualityComparer<TValue>? valComparer = ValComparer;
-            for (Node e = _head; e != null; e = e._next) {
-                if (valComparer.Equals(e._value, value)) {
+            for (Node e = _head; e != null; e = e.next) {
+                if (valComparer.Equals(e.value, value)) {
                     return true;
                 }
             }
@@ -233,7 +233,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public bool Contains(KeyValuePair<TKey, TValue> item) {
         Node node = GetNode(item.Key);
-        return node != null && ValComparer.Equals(node._value, item.Value);
+        return node != null && ValComparer.Equals(node.value, item.Value);
     }
 
     public bool TryGetValue(TKey key, out TValue value) {
@@ -242,7 +242,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             value = _defValue;
             return false;
         }
-        value = node._value;
+        value = node.value;
         return true;
     }
 
@@ -295,7 +295,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     public bool Remove(KeyValuePair<TKey, TValue> item) {
         var node = GetNode(item.Key);
-        if (node != null && ValComparer.Equals(node._value, item.Value)) {
+        if (node != null && ValComparer.Equals(node.value, item.Value)) {
             RemoveNode(node);
             return true;
         }
@@ -317,7 +317,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             value = default;
             return false;
         }
-        value = node._value;
+        value = node.value;
         RemoveNode(node);
         return true;
     }
@@ -341,7 +341,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         _count--;
         _version++;
         FixPointers(oldHead);
-        ShiftKeys(oldHead._index);
+        ShiftKeys(oldHead.index);
         oldHead.AfterRemoved();
         return true;
     }
@@ -365,7 +365,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         _count--;
         _version++;
         FixPointers(oldTail);
-        ShiftKeys(oldTail._index);
+        ShiftKeys(oldTail.index);
         oldTail.AfterRemoved();
         return true;
     }
@@ -399,7 +399,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             throw CollectionUtil.KeyNotFoundException(key);
         }
         MoveToFirst(node);
-        return node._value;
+        return node.value;
     }
 
     /// <summary>
@@ -415,7 +415,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return false;
         }
         MoveToFirst(node);
-        value = node._value;
+        value = node.value;
         return true;
     }
 
@@ -430,7 +430,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             throw CollectionUtil.KeyNotFoundException(key);
         }
         MoveToLast(node);
-        return node._value;
+        return node.value;
     }
 
     /// <summary>
@@ -446,7 +446,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return false;
         }
         MoveToLast(node);
-        value = node._value;
+        value = node.value;
         return true;
     }
 
@@ -462,8 +462,8 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (node == null) {
             throw CollectionUtil.KeyNotFoundException(key);
         }
-        if (node._next != null) {
-            next = node._next._key;
+        if (node.next != null) {
+            next = node.next.key;
             return true;
         }
         next = default;
@@ -482,8 +482,8 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (node == null) {
             throw CollectionUtil.KeyNotFoundException(key);
         }
-        if (node._prev != null) {
-            prev = node._prev._key;
+        if (node.prev != null) {
+            prev = node.prev.key;
             return true;
         }
         prev = default;
@@ -530,12 +530,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
 
         if (reversed) {
-            for (Node e = _tail; e != null; e = e._prev) {
-                array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
+            for (Node e = _tail; e != null; e = e.prev) {
+                array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e.key, e.value);
             }
         } else {
-            for (Node e = _head; e != null; e = e._next) {
-                array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e._key, e._value);
+            for (Node e = _head; e != null; e = e.next) {
+                array[arrayIndex++] = new KeyValuePair<TKey, TValue>(e.key, e.value);
             }
         }
     }
@@ -545,12 +545,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
 
         if (reversed) {
-            for (Node e = _tail; e != null; e = e._prev) {
-                array[arrayIndex++] = e._key;
+            for (Node e = _tail; e != null; e = e.prev) {
+                array[arrayIndex++] = e.key;
             }
         } else {
-            for (Node e = _head; e != null; e = e._next) {
-                array[arrayIndex++] = e._key;
+            for (Node e = _head; e != null; e = e.next) {
+                array[arrayIndex++] = e.key;
             }
         }
     }
@@ -560,12 +560,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (array.Length - arrayIndex < _count) throw new ArgumentException("Array is too small");
 
         if (reversed) {
-            for (Node e = _tail; e != null; e = e._prev) {
-                array[arrayIndex++] = e._value;
+            for (Node e = _tail; e != null; e = e.prev) {
+                array[arrayIndex++] = e.value;
             }
         } else {
-            for (Node e = _head; e != null; e = e._next) {
-                array[arrayIndex++] = e._value;
+            for (Node e = _head; e != null; e = e.next) {
+                array[arrayIndex++] = e.value;
             }
         }
     }
@@ -614,7 +614,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         int pos = mask & hash;
         Node node = table[pos];
         if (node == null) return -(pos + 1);
-        if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+        if (node.hash == hash && keyComparer.Equals(node.key, key)) {
             return pos;
         }
         // 线性探测
@@ -624,7 +624,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             pos = (pos + 1) & mask;
             node = table[pos];
             if (node == null) return -(pos + 1);
-            if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+            if (node.hash == hash && keyComparer.Equals(node.key, key)) {
                 return pos;
             }
         }
@@ -647,14 +647,14 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         int pos = mask & hash;
         Node node = table[pos];
         if (node == null) return null;
-        if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+        if (node.hash == hash && keyComparer.Equals(node.key, key)) {
             return node;
         }
         for (int i = 0; i < mask; i++) {
             pos = (pos + 1) & mask;
             node = table[pos];
             if (node == null) return null;
-            if (node._hash == hash && keyComparer.Equals(node._key, key)) {
+            if (node.hash == hash && keyComparer.Equals(node.key, key)) {
                 return node;
             }
         }
@@ -683,8 +683,8 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         int pos = Find(key, hash);
         if (pos >= 0) {
             Node existNode = _table![pos]!;
-            PutResult<TValue> result = new PutResult<TValue>(false, existNode._value);
-            existNode._value = value;
+            PutResult<TValue> result = new PutResult<TValue>(false, existNode.value);
+            existNode.value = value;
             if (behavior == PutBehavior.MoveToLast) {
                 MoveToLast(existNode);
             } else if (behavior == PutBehavior.MoveToFirst) {
@@ -714,12 +714,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (_count == 0) {
             _head = _tail = node;
         } else if (order == InsertionOrder.Head) {
-            node._next = _head;
-            _head!._prev = node;
+            node.next = _head;
+            _head!.prev = node;
             _head = node;
         } else {
-            node._prev = _tail;
-            _tail!._next = node;
+            node.prev = _tail;
+            _tail!.next = node;
             _tail = node;
         }
         _count++;
@@ -747,16 +747,16 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             if (node == null) {
                 continue;
             }
-            if (node._key == null) {
+            if (node.key == null) {
                 pos = mask + 1;
             } else {
-                pos = node._hash & mask;
+                pos = node.hash & mask;
                 while (newTable[pos] != null) {
                     pos = (pos + 1) & mask;
                 }
             }
             newTable[pos] = node;
-            node._index = pos;
+            node.index = pos;
             if (--remain == 0) {
                 break;
             }
@@ -784,7 +784,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         _count--;
         _version++;
         FixPointers(node);
-        ShiftKeys(node._index);
+        ShiftKeys(node.index);
         node.AfterRemoved(); // 可以考虑自动收缩空间
     }
 
@@ -813,12 +813,12 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                     return;
                 }
                 // [slot   last .... pos   slot] slot是应该属于的位置，pos是实际的位置，slot在连续区间外则应该移动
-                slot = curr._hash & mask;
+                slot = curr.hash & mask;
                 if (last <= pos ? (last >= slot || slot > pos) : (last >= slot && slot > pos)) break;
                 pos = (pos + 1) & mask;
             }
             table[last] = curr;
-            curr._index = last;
+            curr.index = last;
         }
     }
 
@@ -831,17 +831,17 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         if (_count == 0) {
             _head = _tail = null;
         } else if (node == _head) {
-            _head = node._next!;
-            _head._prev = null;
+            _head = node.next!;
+            _head.prev = null;
         } else if (node == _tail) {
-            _tail = node._prev!;
-            _tail._next = null;
+            _tail = node.prev!;
+            _tail.next = null;
         } else {
             // 删除的是中间元素
-            Node prev = node._prev!;
-            Node next = node._next!;
-            prev._next = next;
-            next._prev = prev;
+            Node prev = node.prev!;
+            Node next = node.next!;
+            prev.next = next;
+            next.prev = prev;
         }
     }
 
@@ -850,16 +850,16 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return;
         }
         if (node == _tail) {
-            _tail = node._prev!;
-            _tail._next = null;
+            _tail = node.prev!;
+            _tail.next = null;
         } else {
-            var prev = node._prev!;
-            var next = node._next!;
-            prev._next = next;
-            next._prev = prev;
+            var prev = node.prev!;
+            var next = node.next!;
+            prev.next = next;
+            next.prev = prev;
         }
-        node._next = _head;
-        _head!._prev = node;
+        node.next = _head;
+        _head!.prev = node;
         _head = node;
     }
 
@@ -868,16 +868,16 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             return;
         }
         if (node == _head) {
-            _head = node._next!;
-            _head._prev = null;
+            _head = node.next!;
+            _head.prev = null;
         } else {
-            var prev = node._prev!;
-            var next = node._next!;
-            prev._next = next;
-            next._prev = prev;
+            var prev = node.prev!;
+            var next = node.next!;
+            prev.next = next;
+            next.prev = prev;
         }
-        node._prev = _tail;
-        _tail!._next = node;
+        node.prev = _tail;
+        _tail!.next = node;
         _tail = node;
     }
 
@@ -1027,7 +1027,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
         private static TValue CheckNodeValue(Node? node) {
             if (node == null) throw CollectionUtil.CollectionEmptyException();
-            return node._value;
+            return node.value;
         }
 
         private static bool PeekNodeValue(Node? node, out TValue value) {
@@ -1035,7 +1035,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                 value = default;
                 return false;
             }
-            value = node._value;
+            value = node.value;
             return true;
         }
 
@@ -1156,7 +1156,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
                 return false;
             }
             Node node = _currNode = _nextNode;
-            _nextNode = _reversed ? node._prev : node._next;
+            _nextNode = _reversed ? node.prev : node.next;
             // 其实这期间node的value可能变化，安全的话应该每次创建新的Pair，但c#系统库没这么干
             _current = CurrentOfNode(node);
             return true;
@@ -1168,7 +1168,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             if (_version != _dictionary._version) {
                 throw new InvalidOperationException("EnumFailedVersion");
             }
-            if (_currNode == null || _currNode._index < 0) {
+            if (_currNode == null || _currNode.index < 0) {
                 throw new InvalidOperationException("AlreadyRemoved");
             }
             _dictionary.RemoveNode(_currNode);
@@ -1199,7 +1199,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         protected override KeyValuePair<TKey, TValue> CurrentOfNode(Node node) {
-            return new KeyValuePair<TKey, TValue>(node._key, node._value);
+            return new KeyValuePair<TKey, TValue>(node.key, node.value);
         }
     }
 
@@ -1209,7 +1209,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         protected override TKey CurrentOfNode(Node node) {
-            return node._key;
+            return node.key;
         }
     }
 
@@ -1219,7 +1219,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         protected override TValue CurrentOfNode(Node node) {
-            return node._value;
+            return node.value;
         }
     }
 
@@ -1229,7 +1229,7 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         }
 
         protected override TKey CurrentOfNode(Node node) {
-            return node._key;
+            return node.key;
         }
     }
 
@@ -1240,42 +1240,42 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
     private class Node
     {
         /** 由于Key的hash使用频率极高，缓存以减少求值开销 */
-        internal readonly int _hash;
-        internal readonly TKey? _key;
-        internal TValue? _value;
+        internal readonly int hash;
+        internal readonly TKey? key;
+        internal TValue? value;
         /** 由于使用线性探测法，删除的元素不一定直接位于hash槽上，需要记录，以便快速删除；-1表示已删除 */
-        internal int _index;
+        internal int index;
 
-        internal Node? _prev;
-        internal Node? _next;
+        internal Node? prev;
+        internal Node? next;
 
         public Node(int hash, TKey? key, TValue value, int index) {
-            _hash = hash;
-            _key = key;
-            _value = value;
-            _index = index;
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.index = index;
         }
 
         public void AfterRemoved() {
             if (!ValueIsValueType) {
-                _value = default;
+                value = default;
             }
-            _index = -1;
-            _prev = null;
-            _next = null;
+            index = -1;
+            prev = null;
+            next = null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValuePair<TKey, TValue> AsPair() {
-            return new KeyValuePair<TKey, TValue>(_key, _value);
+            return new KeyValuePair<TKey, TValue>(key, value);
         }
 
         public override int GetHashCode() {
-            return _hash; // 不使用value计算hash，因为value可能在中途变更
+            return hash; // 不使用value计算hash，因为value可能在中途变更
         }
 
         public override string ToString() {
-            return $"{nameof(_key)}: {_key}, {nameof(_value)}: {_value}";
+            return $"{nameof(key)}: {key}, {nameof(value)}: {value}";
         }
     }
 
@@ -1283,38 +1283,38 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #region seril
 
-    private const string Names_Mask = "Mask";
-    private const string Names_LoadFactor = "LoadFactor";
-    private const string Names_Comparer = "Comparer";
-    private const string Names_Pairs = "KeyValuePairs";
-    private const string Names_DefaultValue = "DefaultValue";
+    private const string NAMES_MASK = "Mask";
+    private const string NAMES_LOADFACTOR = "LoadFactor";
+    private const string NAMES_COMPARER = "Comparer";
+    private const string NAMES_PAIRS = "KeyValuePairs";
+    private const string NAMES_DEFAULTVALUE = "DefaultValue";
 
     public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
         if (info == null) throw new ArgumentNullException(nameof(info));
-        info.AddValue(Names_Mask, _mask);
-        info.AddValue(Names_LoadFactor, _loadFactor);
-        info.AddValue(Names_Comparer, _keyComparer, typeof(IEqualityComparer<TKey>));
-        info.AddValue(Names_DefaultValue, _defValue, typeof(TValue));
+        info.AddValue(NAMES_MASK, _mask);
+        info.AddValue(NAMES_LOADFACTOR, _loadFactor);
+        info.AddValue(NAMES_COMPARER, _keyComparer, typeof(IEqualityComparer<TKey>));
+        info.AddValue(NAMES_DEFAULTVALUE, _defValue, typeof(TValue));
 
         if (_table != null && _count > 0) { // 有数据才序列化
             var array = new KeyValuePair<TKey, TValue>[Count];
             CopyTo(array, 0, false);
-            info.AddValue(Names_Pairs, array, typeof(KeyValuePair<TKey, TValue>[]));
+            info.AddValue(NAMES_PAIRS, array, typeof(KeyValuePair<TKey, TValue>[]));
         }
     }
 
     protected LinkedDictionary(SerializationInfo info, StreamingContext context) {
-        this._mask = info.GetInt32(Names_Mask);
-        this._loadFactor = info.GetSingle(Names_LoadFactor);
-        this._keyComparer = (IEqualityComparer<TKey>)info.GetValue(Names_Comparer, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
-        this._defValue = (TValue)info.GetValue(Names_DefaultValue, typeof(TValue));
+        this._mask = info.GetInt32(NAMES_MASK);
+        this._loadFactor = info.GetSingle(NAMES_LOADFACTOR);
+        this._keyComparer = (IEqualityComparer<TKey>)info.GetValue(NAMES_COMPARER, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
+        this._defValue = (TValue)info.GetValue(NAMES_DEFAULTVALUE, typeof(TValue));
 
         HashCommon.CheckLoadFactor(_loadFactor);
         if (_mask + 1 != MathCommon.NextPowerOfTwo(_mask)) {
             throw new Exception("invalid serial data, _mask: " + _mask);
         }
 
-        KeyValuePair<TKey, TValue>[] pairs = (KeyValuePair<TKey, TValue>[])info.GetValue(Names_Pairs, typeof(KeyValuePair<TKey, TValue>[]));
+        KeyValuePair<TKey, TValue>[] pairs = (KeyValuePair<TKey, TValue>[])info.GetValue(NAMES_PAIRS, typeof(KeyValuePair<TKey, TValue>[]));
         if (pairs != null && pairs.Length > 0) {
             BuildTable(pairs);
         }
@@ -1335,8 +1335,8 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
             int hash = KeyHash(pair.Key, keyComparer);
             Node next = new Node(hash, pair.Key, pair.Value, -1);
             //
-            tail._next = next;
-            next._prev = tail;
+            tail.next = next;
+            next.prev = tail;
             tail = next;
         }
         _head = head;
@@ -1345,8 +1345,8 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
         // 散列到数组 -- 走正常的Find方法更安全些
         _table = new Node[_mask + 2];
         _count = pairsArray.Length;
-        for (Node node = _head; node != null; node = node._next) {
-            int pos = Find(node._key, node._hash);
+        for (Node node = _head; node != null; node = node.next) {
+            int pos = Find(node.key, node.hash);
             if (pos >= 0) {
                 throw new SerializationException("invalid serial data");
             }

@@ -39,7 +39,7 @@ public interface ITimepiece : ITimeProvider
     /// </summary>
     /// <param name="time"></param>
     void SetCurrent(long time);
-    
+
     /// <summary>
     /// 在不修改当前时间戳的情况下修改deltaTime
     /// （仅仅用在补偿的时候，慎用）
