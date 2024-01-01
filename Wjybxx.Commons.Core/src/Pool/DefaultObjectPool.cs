@@ -69,10 +69,8 @@ public class DefaultObjectPool<T> : IObjectPool<T> where T : class
         if (obj == null) {
             throw new ArgumentException("object cannot be null.");
         }
-
         // 先调用reset，避免reset出现异常导致添加脏对象到缓存池中 -- 断言是否在池中还是有较大开销
         _resetPolicy(obj);
-
         if (_freeObjects.Count < _maxCapacity) {
             _freeObjects.Push(obj);
         }

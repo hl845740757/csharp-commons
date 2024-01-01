@@ -17,8 +17,10 @@
 #endregion
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Wjybxx.Commons.Ex;
 
 namespace Wjybxx.Commons;
 
@@ -44,6 +46,12 @@ public static class ObjectUtil
     public static T NullToDef<T>(T? obj, T? def) {
         return obj == null ? def : obj;
     }
+
+    /// <summary>
+    /// 获取系统的tick数
+    /// </summary>
+    /// <returns></returns>
+    public static long SystemTicks() => Stopwatch.GetTimestamp();
 
     #region string
 
