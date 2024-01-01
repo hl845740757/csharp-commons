@@ -16,24 +16,20 @@
 
 #endregion
 
-using System;
-
 #pragma warning disable CS1591
 namespace Wjybxx.Commons.Attributes;
 
 /// <summary>
-/// 用于标注关联的原始类文件
+/// 用于标注类文件是生成的
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct |
-                AttributeTargets.Enum | AttributeTargets.Interface)]
-public class SourceFileRefAttribute : Attribute
+public class GeneratedAttribute
 {
     /// <summary>
-    /// 原始Class的类型
+    /// 生成类文件的处理器的限定名
     /// </summary>
-    public readonly Type SourceType;
+    public readonly string Processor;
 
-    public SourceFileRefAttribute(Type sourceType) {
-        this.SourceType = sourceType ?? throw new ArgumentNullException(nameof(sourceType));
+    public GeneratedAttribute(string processor) {
+        Processor = processor;
     }
 }
