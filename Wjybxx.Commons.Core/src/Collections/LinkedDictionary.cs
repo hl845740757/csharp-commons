@@ -1283,38 +1283,38 @@ public class LinkedDictionary<TKey, TValue> : ISequencedDictionary<TKey, TValue>
 
     #region seril
 
-    private const string NAMES_MASK = "Mask";
-    private const string NAMES_LOADFACTOR = "LoadFactor";
-    private const string NAMES_COMPARER = "Comparer";
-    private const string NAMES_PAIRS = "KeyValuePairs";
-    private const string NAMES_DEFAULTVALUE = "DefaultValue";
+    private const string NamesMask = "Mask";
+    private const string NamesLoadFactor = "LoadFactor";
+    private const string NamesComparer = "Comparer";
+    private const string NamesPairs = "KeyValuePairs";
+    private const string NamesDefaultValue = "DefaultValue";
 
     public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
         if (info == null) throw new ArgumentNullException(nameof(info));
-        info.AddValue(NAMES_MASK, _mask);
-        info.AddValue(NAMES_LOADFACTOR, _loadFactor);
-        info.AddValue(NAMES_COMPARER, _keyComparer, typeof(IEqualityComparer<TKey>));
-        info.AddValue(NAMES_DEFAULTVALUE, _defValue, typeof(TValue));
+        info.AddValue(NamesMask, _mask);
+        info.AddValue(NamesLoadFactor, _loadFactor);
+        info.AddValue(NamesComparer, _keyComparer, typeof(IEqualityComparer<TKey>));
+        info.AddValue(NamesDefaultValue, _defValue, typeof(TValue));
 
         if (_table != null && _count > 0) { // 有数据才序列化
             var array = new KeyValuePair<TKey, TValue>[Count];
             CopyTo(array, 0, false);
-            info.AddValue(NAMES_PAIRS, array, typeof(KeyValuePair<TKey, TValue>[]));
+            info.AddValue(NamesPairs, array, typeof(KeyValuePair<TKey, TValue>[]));
         }
     }
 
     protected LinkedDictionary(SerializationInfo info, StreamingContext context) {
-        this._mask = info.GetInt32(NAMES_MASK);
-        this._loadFactor = info.GetSingle(NAMES_LOADFACTOR);
-        this._keyComparer = (IEqualityComparer<TKey>)info.GetValue(NAMES_COMPARER, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
-        this._defValue = (TValue)info.GetValue(NAMES_DEFAULTVALUE, typeof(TValue));
+        this._mask = info.GetInt32(NamesMask);
+        this._loadFactor = info.GetSingle(NamesLoadFactor);
+        this._keyComparer = (IEqualityComparer<TKey>)info.GetValue(NamesComparer, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
+        this._defValue = (TValue)info.GetValue(NamesDefaultValue, typeof(TValue));
 
         HashCommon.CheckLoadFactor(_loadFactor);
         if (_mask + 1 != MathCommon.NextPowerOfTwo(_mask)) {
             throw new Exception("invalid serial data, _mask: " + _mask);
         }
 
-        KeyValuePair<TKey, TValue>[] pairs = (KeyValuePair<TKey, TValue>[])info.GetValue(NAMES_PAIRS, typeof(KeyValuePair<TKey, TValue>[]));
+        KeyValuePair<TKey, TValue>[] pairs = (KeyValuePair<TKey, TValue>[])info.GetValue(NamesPairs, typeof(KeyValuePair<TKey, TValue>[]));
         if (pairs != null && pairs.Length > 0) {
             BuildTable(pairs);
         }

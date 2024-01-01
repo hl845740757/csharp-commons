@@ -16,8 +16,6 @@
 
 #endregion
 
-using System;
-
 namespace Wjybxx.Commons.Time;
 
 /// <summary>
@@ -41,7 +39,7 @@ public static class TimeProviders
     /// <param name="time">初始时间</param>
     /// <returns></returns>
     public static ICachedTimeProvider NewTimeProvider(long time = 0) {
-        return new UnsharableTimeProvider(time);
+        return new TimeProvider(time);
     }
 
     /// <summary>
@@ -50,7 +48,7 @@ public static class TimeProviders
     /// </summary>
     /// <returns></returns>
     public static ITimepiece NewTimepiece() {
-        return new UnsharableTimepiece();
+        return new Timepiece();
     }
 
     #region internal
@@ -74,59 +72,6 @@ public static class TimeProviders
 
         public override string ToString() {
             return "SystemMillisProvider{}";
-        }
-    }
-
-    private class UnsharableTimeProvider : ICachedTimeProvider
-    {
-        private long _time;
-
-        internal UnsharableTimeProvider(long time) {
-            this._time = time;
-        }
-
-        public long Current => _time;
-
-        public void SetCurrent(long time) => this._time = time;
-    }
-
-    private class UnsharableTimepiece : ITimepiece
-    {
-        private long _time;
-        private long _deltaTime;
-
-        public long Current => _time;
-
-        public void SetCurrent(long time) {
-            this._time = time;
-        }
-
-        public long DeltaTime => _deltaTime;
-
-        public void SetDeltaTime(long deltaTime) {
-            CheckDeltaTime(deltaTime);
-            this._deltaTime = deltaTime;
-        }
-
-        public void Update(long deltaTime) {
-            if (deltaTime <= 0) {
-                this._deltaTime = 0;
-            } else {
-                this._deltaTime = deltaTime;
-                this._time += deltaTime;
-            }
-        }
-
-        public void Restart(long curTime, long deltaTime) {
-            CheckDeltaTime(deltaTime);
-            this._time = curTime;
-            this._deltaTime = deltaTime;
-        }
-
-        private static void CheckDeltaTime(long deltaTime) {
-            if (deltaTime < 0) {
-                throw new ArgumentException("deltaTime must gte 0,  value " + deltaTime);
-            }
         }
     }
 

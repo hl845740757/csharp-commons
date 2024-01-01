@@ -761,35 +761,35 @@ public class LinkedHashSet<TKey> : ISequencedSet<TKey>, ISerializable
 
     #region seril
 
-    private const string NAME_MASK = "Mask";
-    private const string NAMES_LOADFACTOR = "LoadFactor";
-    private const string NAMES_COMPARER = "Comparer";
-    private const string NAMES_KEYS = "Keys";
+    private const string NamesMask = "Mask";
+    private const string NamesLoadFactor = "LoadFactor";
+    private const string NamesComparer = "Comparer";
+    private const string NamesKeys = "Keys";
 
     public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
         if (info == null) throw new ArgumentNullException(nameof(info));
 
-        info.AddValue(NAME_MASK, _mask);
-        info.AddValue(NAMES_LOADFACTOR, _loadFactor);
-        info.AddValue(NAMES_COMPARER, _keyComparer, typeof(IEqualityComparer<TKey>));
+        info.AddValue(NamesMask, _mask);
+        info.AddValue(NamesLoadFactor, _loadFactor);
+        info.AddValue(NamesComparer, _keyComparer, typeof(IEqualityComparer<TKey>));
         if (_table != null && _count > 0) { // 有数据才序列化
             var array = new TKey[Count];
             CopyTo(array, 0, false);
-            info.AddValue(NAMES_KEYS, array, typeof(TKey[]));
+            info.AddValue(NamesKeys, array, typeof(TKey[]));
         }
     }
 
     protected LinkedHashSet(SerializationInfo info, StreamingContext context) {
-        _mask = info.GetInt32(NAME_MASK);
-        _loadFactor = info.GetSingle(NAMES_LOADFACTOR);
-        _keyComparer = (IEqualityComparer<TKey>)info.GetValue(NAMES_COMPARER, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
+        _mask = info.GetInt32(NamesMask);
+        _loadFactor = info.GetSingle(NamesLoadFactor);
+        _keyComparer = (IEqualityComparer<TKey>)info.GetValue(NamesComparer, typeof(IEqualityComparer<TKey>)) ?? EqualityComparer<TKey>.Default;
 
         HashCommon.CheckLoadFactor(_loadFactor);
         if (_mask + 1 != MathCommon.NextPowerOfTwo(_mask)) {
             throw new Exception("invalid serial data, _mask: " + _mask);
         }
 
-        TKey[] keys = (TKey[])info.GetValue(NAMES_KEYS, typeof(TKey[]));
+        TKey[] keys = (TKey[])info.GetValue(NamesKeys, typeof(TKey[]));
         if (keys != null && keys.Length > 0) {
             BuildTable(keys);
         }
