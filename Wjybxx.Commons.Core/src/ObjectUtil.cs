@@ -45,6 +45,8 @@ public static class ObjectUtil
         return obj == null ? def : obj;
     }
 
+    #region string
+
     /// <summary>
     /// 获取字符串的长度，如果字符为null，则返回0
     /// </summary>
@@ -132,4 +134,35 @@ public static class ObjectUtil
         }
         return false;
     }
+
+    /// <summary>
+    /// 反转大小写模式
+    /// </summary>
+    /// <param name="caseMode"></param>
+    /// <returns></returns>
+    public static CaseMode Invert(this CaseMode caseMode) {
+        return caseMode switch
+        {
+            CaseMode.UpperCase => CaseMode.LowerCase,
+            CaseMode.LowerCase => CaseMode.UpperCase,
+            _ => throw new AssertionError()
+        };
+    }
+
+    /// <summary>
+    /// 将字符串转为给定模式
+    /// </summary>
+    /// <param name="caseMode">大小写模式</param>
+    /// <param name="value">要转换的字符串</param>
+    /// <returns></returns>
+    public static string ToCase(this CaseMode caseMode, string value) {
+        return caseMode switch
+        {
+            CaseMode.UpperCase => value.ToUpper(),
+            CaseMode.LowerCase => value.ToLower(),
+            _ => throw new AssertionError()
+        };
+    }
+
+    #endregion
 }

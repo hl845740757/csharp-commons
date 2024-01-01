@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // Copyright 2023 wjybxx(845740757@qq.com)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,30 +12,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #endregion
 
-using System;
-using System.Runtime.Serialization;
-
-#pragma warning disable CS1591
 namespace Wjybxx.Commons;
 
 /// <summary>
-/// 该异常表示参数错误
-/// (该类主要方便Java代码迁移)
+/// 大小写模式
 /// </summary>
-public class IllegalArgumentException : ArgumentException
+public enum CaseMode : byte
 {
-    public IllegalArgumentException() {
-    }
-
-    protected IllegalArgumentException(SerializationInfo info, StreamingContext context) : base(info, context) {
-    }
-
-    public IllegalArgumentException(string? message) : base(message) {
-    }
-
-    public IllegalArgumentException(string? message, Exception? innerException) : base(message, innerException) {
-    }
+    /** 大写 */
+    UpperCase = 1,
+    /** 小写 */
+    LowerCase = 2, 
+    
 }

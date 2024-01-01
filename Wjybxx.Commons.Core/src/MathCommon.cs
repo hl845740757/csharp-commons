@@ -16,8 +16,10 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 
+#pragma warning disable CS1591
 namespace Wjybxx.Commons;
 
 /// <summary>
@@ -62,6 +64,54 @@ public static class MathCommon
         num = (num >> 16) | num;
         num = (num >> 32) | num;
         return ++num;
+    }
+
+    #endregion
+
+    #region min/max
+
+    public static int Min(int a, int b, int c) {
+        if (a > b) a = b;
+        if (a > c) a = c;
+        return a;
+    }
+
+    public static int Max(int a, int b, int c) {
+        if (a < b) a = b;
+        if (a < c) a = c;
+        return a;
+    }
+
+    public static long Min(long a, long b, long c) {
+        if (a > b) a = b;
+        if (a > c) a = c;
+        return a;
+    }
+
+    public static long Max(long a, long b, long c) {
+        if (a < b) a = b;
+        if (a < c) a = c;
+        return a;
+    }
+
+    public static float Min(float a, float b, float c) {
+        float r = Math.Min(a, b);
+        return Math.Min(r, c);
+    }
+
+    public static float Max(float a, float b, float c) {
+        float r = Math.Max(a, b);
+        return Math.Max(r, c);
+    }
+
+    public static double Min(double a, double b, double c) {
+        double r = Math.Min(a, b);
+        return Math.Min(r, c);
+    }
+
+    public static double Max(double a, double b, double c) {
+        double r = Math.Max(a, b);
+        return Math.Max(r, c);
     }
 
     #endregion
